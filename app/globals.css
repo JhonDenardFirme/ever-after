@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Base surface. Paper is the room — everything sits on it.
+--------------------------------------------------------------------------- */
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+}
+
+/* ---------------------------------------------------------------------------
+   The paper grain. One tiled SVG turbulence filter at ~3.5% opacity, fixed
+   over everything, ignoring pointer events. Zero network requests, reads as
+   grain at any zoom. This single rule is most of what keeps the app from
+   looking like a template.
+--------------------------------------------------------------------------- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------------------------------------------------------------------------
+   Focus + selection. Keyboard focus must always be visible — violet ring,
+   never removed. Selection gets the light violet so even highlighting text
+   feels on-brand.
+--------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid #6b4ea8;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: #a987e8;
+  color: #1e1729;
+}
