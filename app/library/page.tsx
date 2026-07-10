@@ -1,40 +1,42 @@
 // -----------------------------------------------------------------------------
-// app/library/page.tsx — The Library (Phase 1 placeholder).
+// app/library/page.tsx — The Library.
 //
-// This is a Server Component: it can `await auth()` directly, no useEffect,
-// no loading spinner, no client fetch. The session is read on the server and
-// the greeting renders in the first paint.
+// Server Component: it awaits the session and the stories directly. No
+// useEffect, no spinner, no client fetch — the shelf is rendered before the
+// HTML leaves the server.
 //
-// Phase 2 replaces the empty state with real story tiles + shelfLift motion
-// and wires "Begin a new chapter" to a createStory Server Action. The layout
-// shell here (header, greeting, main region) is built to survive that —
-// Phase 2 swaps the <section>, not the page.
+// force-dynamic because a newly created story must appear immediately.
+// Without it, Next.js would happily serve a cached empty shelf.
 // -----------------------------------------------------------------------------
 
 import { auth, signOut } from '@/lib/auth';
 import { copy } from '@/lib/copy';
+import { getStories, getCoverUrl } from '@/lib/queries';
+import StoryTile from '@/components/library/StoryTile';
+import BeginChapter from '@/components/library/BeginChapter';
+
+export const dynamic = 'force-dynamic';
 
 export default async function LibraryPage() {
   const session = await auth();
-  // Middleware guarantees a session exists here, but I never trust a
-  // guarantee I can also check for free:
   const firstName = session?.user?.name?.split(' ')[0] ?? 'you';
 
+  const stories = await getStories();
+  const covers = await Promise.all(stories.map((s) => getCoverUrl(s)));
+
+  const hasStories = stories.length > 0;
+
   return (
-    <main className="mx-auto min-h-dvh max-w-4xl px-6 py-12 sm:py-16">
-      {/* ---- Header ---- */}
-      <header className="mb-16 flex items-start justify-between">
+    <main className="mx-auto min-h-dvh max-w-5xl px-6 py-12 sm:py-16">
+      <header className="mb-16 flex items-start justify-between gap-6">
         <div>
           <p className="mb-2 text-[11px] uppercase tracking-[0.28em] text-ink-soft">
             {copy.brand.name}
           </p>
-          <h1 className="font-serif text-4xl text-ink sm:text-5xl">
-            {copy.library.title}
-          </h1>
+          <h1 className="font-serif text-4xl text-ink sm:text-5xl">{copy.library.title}</h1>
+          <p className="mt-3 text-sm text-ink-soft">{copy.library.greeting(firstName)}</p>
         </div>
 
-        {/* Sign out — NextAuth signOut via inline Server Action, same
-            form-action pattern as sign-in. */}
         <form
           action={async () => {
             'use server';
@@ -43,35 +45,34 @@ export default async function LibraryPage() {
         >
           <button
             type="submit"
-            className="rounded-full border border-rule px-4 py-2 text-xs tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
+            className="shrink-0 rounded-full border border-rule px-4 py-2 text-xs tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
           >
             {copy.nav.signOut}
           </button>
         </form>
       </header>
 
-      {/* ---- Empty shelf (Phase 2 fills this) ---- */}
-      <section className="flex flex-col items-center py-24 text-center">
-        <p className="mb-3 text-sm text-ink-soft">
-          {copy.library.greeting(firstName)}
-        </p>
-        <h2 className="mb-2 font-serif text-2xl italic text-ink">
-          {copy.library.empty}
-        </h2>
-        <p className="mb-10 max-w-xs text-sm text-ink-soft">
-          {copy.library.firstVisit}
-        </p>
+      {hasStories ? (
+        <>
+          <section className="mb-16 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+            {stories.map((story, i) => (
+              <StoryTile key={story.id} story={story} coverUrl={covers[i]} />
+            ))}
+          </section>
 
-        {/* Real in Phase 2 — for now it's an honest preview of the primary
-            action, disabled so nothing pretends to work before it does. */}
-        <button
-          type="button"
-          disabled
-          className="cursor-not-allowed rounded-full bg-violet px-7 py-3.5 text-sm tracking-wide text-paper opacity-50"
-        >
-          {copy.library.begin}
-        </button>
-      </section>
+          <div className="flex justify-center border-t border-rule pt-12">
+            <BeginChapter />
+          </div>
+        </>
+      ) : (
+        <section className="flex flex-col items-center py-20 text-center sm:py-28">
+          <h2 className="mb-3 font-serif text-3xl italic text-ink">{copy.library.empty}</h2>
+          <p className="mb-12 max-w-xs text-sm leading-relaxed text-ink-soft">
+            {copy.library.firstVisit}
+          </p>
+          <BeginChapter />
+        </section>
+      )}
     </main>
   );
 }
