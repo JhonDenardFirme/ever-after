@@ -31,6 +31,8 @@ import {
 } from '@/app/actions/couple';
 import { copy } from '@/lib/copy';
 import StarDivider from '@/components/ui/StarDivider';
+import StarsBackground from '@/components/ui/StarsBackground';
+import StatsStrip from '@/components/ui/StatsStrip';
 import type { Couple, Author, StoryStats } from '@/lib/types';
 
 const COMPRESSION = { maxSizeMB: 0.9, maxWidthOrHeight: 2200, useWebWorker: true };
@@ -331,6 +333,7 @@ export default function Frontispiece({
       {/* centred scrim — the readability layer behind the text */}
       <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(72% 58% at 50% 50%, rgba(20,6,38,0.55) 0%, rgba(20,6,38,0) 78%)' }} />
       <div className="pointer-events-none absolute inset-0 opacity-[0.12] mix-blend-soft-light" style={{ backgroundImage: GRAIN }} />
+      <StarsBackground opacity={0.5} />
       {/* soft fade into the page at the very bottom */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-paper/90 to-transparent" />
       {/* slow drifting bloom */}
@@ -445,12 +448,19 @@ export default function Frontispiece({
               {copy.frontispiece.eyebrow}
             </motion.p>
 
-            <motion.h2
-              {...rise(0.05)}
-              className="font-serif text-5xl leading-[1.05] text-paper/95 [text-shadow:0_0_50px_rgba(108,43,217,0.65),0_2px_30px_rgba(0,0,0,0.6)] sm:text-7xl"
-            >
-              {row?.headline || copy.frontispiece.titlePlaceholder}
-            </motion.h2>
+            <motion.div {...rise(0.05)} className="relative">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 -z-10 blur-2xl"
+                style={{ background: 'radial-gradient(60% 120% at 50% 50%, rgba(255,244,225,0.14) 0%, rgba(255,244,225,0) 70%)' }}
+              />
+              <h2
+                style={{ backgroundImage: 'linear-gradient(180deg,#FBF6EE 0%,#FFFFFF 40%,#F7E7D8 72%,#EBE4F6 100%)' }}
+                className="bg-clip-text font-serif text-5xl leading-[1.05] tracking-tight text-transparent [filter:drop-shadow(0_2px_26px_rgba(0,0,0,0.4))] sm:text-7xl"
+              >
+                {row?.headline || copy.frontispiece.titlePlaceholder}
+              </h2>
+            </motion.div>
 
             <motion.p {...rise(0.12)} className={`mx-auto mt-6 max-w-xl font-serif text-xl italic leading-relaxed text-paper/85 ${TEXT_SHADOW} sm:text-2xl`}>
               {row?.story || copy.frontispiece.statement}
@@ -464,14 +474,9 @@ export default function Frontispiece({
 
             <StarDivider onDark className="my-10" />
 
-            <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-              {statItems.map((s, i) => (
-                <motion.div key={s.label} {...rise(0.2 + i * 0.06)}>
-                  <p className={`text-[10px] uppercase tracking-[0.26em] text-violet-3 ${TEXT_SHADOW}`}>{s.label}</p>
-                  <p className={`mt-1 font-serif text-3xl text-paper ${TEXT_SHADOW} sm:text-4xl`}>{s.value}</p>
-                </motion.div>
-              ))}
-            </div>
+            <motion.div {...rise(0.2)}>
+              <StatsStrip items={statItems} onDark />
+            </motion.div>
 
             <StarDivider onDark className="my-10" />
 

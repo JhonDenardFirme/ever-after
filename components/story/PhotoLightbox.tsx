@@ -16,7 +16,8 @@ import { useState, useEffect, useTransition } from 'react';
 import { deleteFrame, updateCaption } from '@/app/actions/frames';
 import { setMyKeepsake, removeMyKeepsake } from '@/app/actions/afterword';
 import { copy } from '@/lib/copy';
-import { StarIcon, TrashIcon } from '@/components/ui/icons';
+import { glowGradient } from '@/lib/gradients';
+import { StarIcon, TrashIcon, PlusIcon } from '@/components/ui/icons';
 import type { Frame, Author } from '@/lib/types';
 
 /** "Denard's Keepsake" / "Denard's & Airhyl's Keepsake". */
@@ -118,11 +119,12 @@ export default function PhotoLightbox({
       aria-modal="true"
     >
       <div
-        className="group relative flex max-h-full w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-paper shadow-2xl sm:flex-row"
+        className="group relative flex max-h-full w-full max-w-4xl flex-col overflow-hidden rounded-2xl shadow-glow ring-1 ring-inset ring-white/10 sm:flex-row"
+        style={{ backgroundImage: glowGradient(0) }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Media */}
-        <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-ink">
+        <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
           {frame.media_url &&
             (frame.media_type === 'video' ? (
               <video src={frame.media_url} controls playsInline className="max-h-[70vh] w-full object-contain" />
@@ -145,8 +147,8 @@ export default function PhotoLightbox({
           )}
         </div>
 
-        {/* Details */}
-        <aside className="flex w-full shrink-0 flex-col justify-between gap-5 border-t border-rule p-6 sm:w-80 sm:border-l sm:border-t-0">
+        {/* Details — the neutral white panel (the image side carries the glow) */}
+        <aside className="flex w-full shrink-0 flex-col justify-between gap-5 border-t border-rule bg-paper p-6 sm:w-80 sm:border-l sm:border-t-0">
           <div>
             <p className="mb-4 text-[10px] uppercase tracking-[0.24em] text-ember">{copy.frames.details}</p>
 
@@ -184,7 +186,7 @@ export default function PhotoLightbox({
                   </div>
                 </div>
               ) : savedCaption ? (
-                <div className="group/cap">
+                <div>
                   <p className="font-serif text-lg italic leading-snug text-ink">{savedCaption}</p>
                   <div className="mt-1.5 flex gap-3">
                     <button
@@ -211,9 +213,9 @@ export default function PhotoLightbox({
                     setCaption('');
                     setEditingCaption(true);
                   }}
-                  className="text-sm text-ink-soft underline-offset-4 hover:text-violet hover:underline"
+                  className="inline-flex items-center gap-1.5 text-sm text-ink-soft underline-offset-4 hover:text-violet hover:underline"
                 >
-                  + {copy.frames.addCaption}
+                  <PlusIcon size={13} /> {copy.frames.addCaption}
                 </button>
               )}
             </div>

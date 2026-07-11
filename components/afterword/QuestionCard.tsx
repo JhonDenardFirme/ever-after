@@ -16,7 +16,7 @@
 import { useState, useTransition } from 'react';
 import { answerQuestion } from '@/app/actions/afterword';
 import { copy } from '@/lib/copy';
-import { StarIcon } from '@/components/ui/icons';
+import { StarIcon, SparkIcon } from '@/components/ui/icons';
 import type { AfterwordQuestion, AfterwordEntry, Author, Frame } from '@/lib/types';
 import KeepsakeUpload from './KeepsakeUpload';
 
@@ -55,7 +55,7 @@ function TheirAnswer({ entry, author, frames }: { entry: AfterwordEntry; author:
   const rating = entry.answer_text && /^[1-5]$/.test(entry.answer_text) ? Number(entry.answer_text) : null;
 
   return (
-    <div className="border-l-2 border-rule pl-5">
+    <div>
       <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-ink-soft">
         {copy.afterword.theirAnswer(author.name)}
       </p>
@@ -121,9 +121,14 @@ export default function QuestionCard({
 
   return (
     <article className="border-t border-rule py-8 first:border-t-0 first:pt-0">
-      <h3 className="mb-6 max-w-xl font-serif text-2xl leading-snug text-ink">{question.question}</h3>
+      <div className="mb-6 flex items-center gap-3">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-violet-2/50 font-serif text-sm text-violet">
+          {String(index).padStart(2, '0')}
+        </span>
+        <h3 className="font-serif text-2xl leading-snug text-ink">{question.question}</h3>
+      </div>
 
-      <div className="grid gap-8 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-[1fr_auto_1fr]">
         {/* Mine — editable */}
         <div>
           <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-ink-soft">{copy.afterword.yourAnswer}</p>
@@ -180,13 +185,20 @@ export default function QuestionCard({
           )}
         </div>
 
-        {/* Theirs — read-only */}
-        <div>
+        {/* Divider between the two answers — hairline + star */}
+        <div className="hidden sm:flex sm:flex-col sm:items-center sm:justify-center sm:gap-1">
+          <span className="w-px flex-1 bg-gradient-to-b from-transparent to-rule" />
+          <SparkIcon size={9} className="text-ember" />
+          <span className="w-px flex-1 bg-gradient-to-t from-transparent to-rule" />
+        </div>
+
+        {/* Theirs — read-only. Always shown, so both parties have a place. */}
+        <div className="border-t border-rule pt-5 sm:border-t-0 sm:pt-0">
           {theirs && theirAuthor ? (
             <TheirAnswer entry={theirs} author={theirAuthor} frames={frames} />
           ) : (
             theirAuthor && (
-              <div className="border-l-2 border-rule pl-5">
+              <div>
                 <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-ink-soft">
                   {copy.afterword.theirAnswer(theirAuthor.name)}
                 </p>

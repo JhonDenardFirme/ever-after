@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { copy } from '@/lib/copy';
 import type { Story } from '@/lib/types';
 import SectionHeading from '@/components/ui/SectionHeading';
+import EpigraphBanner from './EpigraphBanner';
 import PrologueBody from './PrologueBody';
 
 function longDate(iso: string | null): string | null {
@@ -25,10 +26,10 @@ function longDate(iso: string | null): string | null {
 
 export default function PrologueSection({
   story,
-  coverUrl,
+  bannerPhotos,
 }: {
   story: Story;
-  coverUrl: string | null;
+  bannerPhotos: string[];
 }) {
   const [editing, setEditing] = useState(false);
 
@@ -97,36 +98,9 @@ export default function PrologueSection({
             </p>
           )}
 
-          {/* Epigraph banner — full content width, centred on the cover under a
-              violet multiply, Dedication beneath. */}
+          {/* Epigraph — centred on the glowing gradient, cross-fading photos */}
           {(story.epigraph || story.dedication) && (
-            <figure className="mb-14 overflow-hidden rounded-3xl">
-              <div className="relative flex min-h-[240px] items-center justify-center px-8 py-16 sm:min-h-[300px]">
-                <div className="absolute inset-0 bg-violet-hero" />
-                {coverUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={coverUrl}
-                    alt=""
-                    className="absolute inset-0 h-full w-full object-cover opacity-55 mix-blend-multiply"
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-violet-deep/75 via-transparent to-violet-deep/30" />
-
-                <figcaption className="relative mx-auto max-w-2xl text-center">
-                  {story.epigraph && (
-                    <p className="font-serif text-2xl italic leading-relaxed text-paper [text-shadow:0_1px_20px_rgba(53,14,112,0.7)] sm:text-3xl">
-                      {story.epigraph}
-                    </p>
-                  )}
-                  {story.dedication && (
-                    <p className="mx-auto mt-6 max-w-md text-sm italic leading-relaxed text-violet-3">
-                      {story.dedication}
-                    </p>
-                  )}
-                </figcaption>
-              </div>
-            </figure>
+            <EpigraphBanner epigraph={story.epigraph} dedication={story.dedication} photos={bannerPhotos} />
           )}
 
           {/* Description */}

@@ -2,28 +2,34 @@
 // -----------------------------------------------------------------------------
 // components/storyboard/MomentTimeline.tsx (1.2)
 //
-// The read-only Outline: the Moments as a numbered-circle timeline. On the album
-// it auto-scrolls forever (autoscroll); on the Invitation page it's a static,
-// scrollable timeline. Duplicating the cards under autoscroll is what lets the
-// -50% marquee loop seamlessly (see .ever-marquee in globals.css).
+// The read-only Outline as a numbered, star-linked timeline. Each Moment is a
+// card with its number seated on the top edge; a small star links one to the
+// next. On the album it auto-scrolls forever; on the Invitation it's a static
+// horizontal scroller. Both edges fade (a mask) so the row never ends on a hard
+// cut. Duplicating the cards under autoscroll makes the -50% marquee seamless.
 // -----------------------------------------------------------------------------
 
 import { orderBeats, formatBeatTime } from '@/lib/beats';
 import { copy } from '@/lib/copy';
 import type { Chapter } from '@/lib/types';
+import { SparkIcon } from '@/components/ui/icons';
 import BeatIcon from './BeatIcon';
 
+const EDGE_FADE = {
+  maskImage: 'linear-gradient(to right, transparent, #000 7%, #000 93%, transparent)',
+  WebkitMaskImage: 'linear-gradient(to right, transparent, #000 7%, #000 93%, transparent)',
+} as React.CSSProperties;
+
 function MomentCard({ beat, n }: { beat: Chapter; n: number }) {
+  // Fixed height + centred content, so full and sparse Moments read the same.
   return (
-    <div className="relative w-56 shrink-0 rounded-2xl border border-rule bg-paper2 p-5">
-      <div className="mb-3 flex items-center gap-3">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-violet text-sm text-paper shadow-glow-soft">
-          {n}
-        </span>
-        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-rule text-violet">
-          <BeatIcon type={beat.beat_type} size={15} />
-        </span>
-      </div>
+    <div className="relative mt-5 flex h-[196px] w-56 shrink-0 flex-col items-center justify-center overflow-hidden rounded-2xl border border-rule bg-paper2 px-5 text-center transition-colors hover:border-violet-2">
+      <span className="absolute -top-4 left-1/2 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full bg-ever-gradient text-sm text-paper shadow-glow-soft">
+        {n}
+      </span>
+      <span className="mb-2 flex h-8 w-8 items-center justify-center rounded-full border border-rule text-violet">
+        <BeatIcon type={beat.beat_type} size={15} />
+      </span>
       <p className="text-[10px] uppercase tracking-[0.18em] text-ember">
         {formatBeatTime(beat.scheduled_at, copy.storyboard.untimed)}
         {beat.setting ? ` · ${beat.setting}` : ''}
@@ -34,37 +40,45 @@ function MomentCard({ beat, n }: { beat: Chapter; n: number }) {
   );
 }
 
-export default function MomentTimeline({
-  beats,
-  autoscroll = false,
-}: {
-  beats: Chapter[];
-  autoscroll?: boolean;
-}) {
+function Connector({ id }: { id: string }) {
+  return (
+    <span key={id} className="flex shrink-0 items-center px-1 text-ember/60" aria-hidden="true">
+      <SparkIcon size={12} className="ever-star-pulse" />
+    </span>
+  );
+}
+
+function buildRow(beats: Chapter[], keyPrefix: string, ariaHidden = false) {
+  const nodes: React.ReactNode[] = [<Connector key={`${keyPrefix}-lead`} id={`${keyPrefix}-lead`} />];
+  beats.forEach((b, i) => {
+    if (i > 0) nodes.push(<Connector key={`${keyPrefix}-c-${b.id}`} id={`${keyPrefix}-c-${b.id}`} />);
+    nodes.push(<MomentCard key={`${keyPrefix}-${b.id}`} beat={b} n={i + 1} />);
+  });
+  nodes.push(<Connector key={`${keyPrefix}-trail`} id={`${keyPrefix}-trail`} />);
+  return (
+    <div className="flex items-center gap-1" aria-hidden={ariaHidden || undefined}>
+      {nodes}
+    </div>
+  );
+}
+
+export default function MomentTimeline({ beats, autoscroll = false }: { beats: Chapter[]; autoscroll?: boolean }) {
   const ordered = orderBeats(beats);
   if (ordered.length === 0) return null;
 
-  const cards = ordered.map((b, i) => <MomentCard key={b.id} beat={b} n={i + 1} />);
-
   if (!autoscroll) {
     return (
-      <div className="ever-marquee-wrap -mx-6 px-6" style={{ overflowX: 'auto' }}>
-        <div className="flex gap-4 pb-2">{cards}</div>
+      <div className="-mx-6 overflow-x-auto px-6" style={EDGE_FADE}>
+        <div className="w-max pb-2">{buildRow(ordered, 'inv')}</div>
       </div>
     );
   }
 
-  // Autoscroll: duplicate the row so translateX(-50%) loops without a seam.
   return (
-    <div className="ever-marquee-wrap -mx-6">
-      <div className="ever-marquee flex w-max gap-4 px-6">
-        {cards}
-        {/* aria-hidden duplicate purely for the seamless loop */}
-        <div className="flex gap-4" aria-hidden="true">
-          {ordered.map((b, i) => (
-            <MomentCard key={`dup-${b.id}`} beat={b} n={i + 1} />
-          ))}
-        </div>
+    <div className="ever-marquee-wrap -mx-6" style={EDGE_FADE}>
+      <div className="ever-marquee flex w-max gap-1 px-6">
+        {buildRow(ordered, 'a')}
+        {buildRow(ordered, 'b', true)}
       </div>
     </div>
   );

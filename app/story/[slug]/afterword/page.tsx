@@ -11,7 +11,6 @@
 // still show, grouped last, so nothing written before the rebuild is lost.
 // -----------------------------------------------------------------------------
 
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import {
   getStoryBySlug,
@@ -27,6 +26,9 @@ import { copy, AFTERWORD_SECTIONS } from '@/lib/copy';
 import QuestionCard from '@/components/afterword/QuestionCard';
 import AfterwordCarousel from '@/components/afterword/AfterwordCarousel';
 import SectionHeading from '@/components/ui/SectionHeading';
+import StarDivider from '@/components/ui/StarDivider';
+import StarField from '@/components/ui/StarField';
+import BackLink from '@/components/ui/BackLink';
 import type { AfterwordQuestion } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -85,6 +87,7 @@ export default async function AfterwordPage({ params }: { params: { slug: string
           <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-multiply" />
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-violet-deep/80 via-violet-deep/20 to-violet-deep/45" />
+        <StarField />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-paper to-transparent" />
         <div className="relative">
           <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-ember">{copy.afterword.eyebrow}</p>
@@ -94,16 +97,12 @@ export default async function AfterwordPage({ params }: { params: { slug: string
           <p className="mx-auto mt-5 max-w-md text-sm italic leading-relaxed text-violet-3">
             {copy.afterword.tagline}
           </p>
+          <StarDivider onDark className="mx-auto mt-6 max-w-[12rem]" />
         </div>
       </div>
 
       <section className="mx-auto max-w-3xl px-6 py-14">
-        <Link
-          href={`/story/${story.slug}`}
-          className="mb-10 inline-block text-[11px] uppercase tracking-[0.2em] text-ink-soft transition-colors hover:text-violet"
-        >
-          ← {story.title}
-        </Link>
+        <BackLink href={`/story/${story.slug}`} label={story.title} className="mb-10" />
 
         <AfterwordCarousel frames={frames} />
 
@@ -112,6 +111,7 @@ export default async function AfterwordPage({ params }: { params: { slug: string
           if (inSection.length === 0) return null;
           return (
             <div key={section.key} className="mb-20">
+              <StarDivider className="mx-auto mb-12 max-w-sm" />
               <SectionHeading align="center" title={section.title} tagline={section.blurb} />
               {inSection.map((q, i) => cardFor(q, i))}
             </div>
@@ -126,12 +126,7 @@ export default async function AfterwordPage({ params }: { params: { slug: string
         )}
 
         <div className="mt-8 border-t border-rule pt-10 text-center">
-          <Link
-            href={`/story/${story.slug}`}
-            className="inline-block rounded-full border border-rule px-7 py-3.5 text-sm tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
-          >
-            ← {story.title}
-          </Link>
+          <BackLink href={`/story/${story.slug}`} label={story.title} className="justify-center" />
         </div>
       </section>
     </main>

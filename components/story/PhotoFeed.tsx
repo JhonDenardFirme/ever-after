@@ -26,17 +26,10 @@ import { copy } from '@/lib/copy';
 import type { Chapter, Frame, Author } from '@/lib/types';
 import UploadFrame from '@/components/frames/UploadFrame';
 import SectionHeading from '@/components/ui/SectionHeading';
-import { StarBadge } from '@/components/ui/icons';
+import { StarBadge, PlusIcon } from '@/components/ui/icons';
 import PhotoLightbox from './PhotoLightbox';
 
 type Group = { label: string | null; frames: Frame[] };
-
-/** An answered Afterword reflection, woven between the photos. */
-export type Reflection = { id: string; question: string; answers: { name: string; text: string }[] };
-
-type FeedItem = { kind: 'frame'; frame: Frame } | { kind: 'reflection'; reflection: Reflection };
-
-const REFLECTION_STRIDE = 4; // drop a reflection card after every N photos
 
 /**
  * Orientation buckets: portrait / square / landscape. Frames keep their
@@ -66,7 +59,6 @@ export default function PhotoFeed({
   keepsakes,
   myKeepsakeFrameId,
   authors,
-  reflections = [],
 }: {
   storyId: string;
   slug: string;
@@ -76,7 +68,6 @@ export default function PhotoFeed({
   keepsakes: Record<string, string[]>;
   myKeepsakeFrameId: string | null;
   authors: Record<string, Author>;
-  reflections?: Reflection[];
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -163,46 +154,6 @@ export default function PhotoFeed({
     );
   }
 
-  // Weave answered reflections through the feed: one after every few photos,
-  // drawn from a shared queue so they spread across the sets. Leftovers land in
-  // the final group.
-  const queue = reflections.slice(0, 8);
-  let qi = 0;
-  const groupsRender = groups.map((g) => {
-    const items: FeedItem[] = [];
-    g.frames.forEach((f, i) => {
-      items.push({ kind: 'frame', frame: f });
-      if ((i + 1) % REFLECTION_STRIDE === 0 && qi < queue.length) {
-        items.push({ kind: 'reflection', reflection: queue[qi++] });
-      }
-    });
-    return { label: g.label, items };
-  });
-  if (groupsRender.length > 0) {
-    while (qi < queue.length) {
-      groupsRender[groupsRender.length - 1].items.push({ kind: 'reflection', reflection: queue[qi++] });
-    }
-  }
-
-  function ReflectionCard({ r }: { r: Reflection }) {
-    return (
-      <div className="mb-4 break-inside-avoid rounded-2xl bg-violet-hero p-5 text-paper shadow-glow-soft ring-1 ring-inset ring-white/10">
-        <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-violet-3">
-          {copy.afterword.reflectionEyebrow}
-        </p>
-        <p className="font-serif text-lg italic leading-snug text-paper/90">{r.question}</p>
-        <div className="mt-3 space-y-3">
-          {r.answers.map((a, i) => (
-            <div key={i}>
-              <p className="font-serif text-base leading-snug">{a.text}</p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-[0.16em] text-violet-3">— {a.name}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   const headerAction = lastChapter ? (
     <UploadFrame
       slug={slug}
@@ -212,9 +163,9 @@ export default function PhotoFeed({
           type="button"
           onClick={openPicker}
           disabled={pending}
-          className="rounded-full bg-violet px-5 py-2.5 text-xs tracking-wide text-paper shadow-glow-soft transition-colors hover:bg-violet-2 disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-full bg-ever-gradient px-5 py-2.5 text-xs tracking-wide text-paper shadow-glow-soft transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {pending ? label ?? copy.frames.developing : copy.frames.develop}
+          {pending ? label ?? copy.frames.developing : (<><PlusIcon size={13} />{copy.frames.develop}</>)}
         </button>
       )}
     />
@@ -242,7 +193,7 @@ export default function PhotoFeed({
         </p>
       ) : (
         <div className="space-y-14">
-          {groupsRender.map((group, gi) => (
+          {groups.map((group, gi) => (
             <div key={group.label ?? `__unlabeled-${gi}`}>
               {/* A labeled set gets a header + its own upload button. The
                   unlabeled group renders with neither. */}
@@ -260,9 +211,9 @@ export default function PhotoFeed({
                           type="button"
                           onClick={openPicker}
                           disabled={pending}
-                          className="shrink-0 rounded-full border border-rule px-3.5 py-1.5 text-[11px] tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet disabled:opacity-60"
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-rule px-3.5 py-1.5 text-[11px] tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet disabled:opacity-60"
                         >
-                          {pending ? label ?? copy.frames.developing : copy.frames.uploadToSet(group.label as string)}
+                          {pending ? label ?? copy.frames.developing : (<><PlusIcon size={12} />{copy.frames.uploadToSet(group.label as string)}</>)}
                         </button>
                       )}
                     />
@@ -271,13 +222,9 @@ export default function PhotoFeed({
               )}
 
               <div className="columns-2 gap-4 sm:columns-3">
-                {group.items.map((item) =>
-                  item.kind === 'frame' ? (
-                    <Tile key={item.frame.id} frame={item.frame} />
-                  ) : (
-                    <ReflectionCard key={`r-${item.reflection.id}`} r={item.reflection} />
-                  )
-                )}
+                {group.frames.map((frame) => (
+                  <Tile key={frame.id} frame={frame} />
+                ))}
               </div>
             </div>
           ))}

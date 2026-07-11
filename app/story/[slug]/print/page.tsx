@@ -28,6 +28,7 @@ import {
 } from '@/lib/queries';
 import { orderBeats, formatBeatTime } from '@/lib/beats';
 import { copy } from '@/lib/copy';
+import { ArrowLeftIcon } from '@/components/ui/icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,9 +70,9 @@ export default async function PrintPage({ params }: { params: { slug: string } }
       <div className="no-print mb-12 flex items-center justify-between border-b border-rule pb-6">
         <Link
           href={`/story/${story.slug}`}
-          className="text-[11px] uppercase tracking-[0.2em] text-ink-soft transition-colors hover:text-violet"
+          className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition-colors hover:text-violet"
         >
-          ← {copy.print.back}
+          <ArrowLeftIcon size={13} /> {copy.print.back}
         </Link>
         <p className="text-xs italic text-ink-soft">{copy.print.hint}</p>
       </div>

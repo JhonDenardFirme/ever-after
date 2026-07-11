@@ -58,9 +58,25 @@ body::before {
 }
 .ever-star-pulse { animation: ever-star-pulse 3.6s ease-in-out infinite; }
 
+/* Cover hero: a barely-there 100%->103% scale over 40s, and an almost
+   imperceptible star-field breathe. Restrained on purpose. */
+@keyframes ever-hero-scale {
+  from { transform: scale(1); }
+  to   { transform: scale(1.03); }
+}
+.ever-hero-scale { animation: ever-hero-scale 40s ease-in-out infinite alternate; will-change: transform; }
+
+@keyframes ever-twinkle {
+  0%, 100% { opacity: var(--star-o, 0.5); }
+  50%      { opacity: calc(var(--star-o, 0.5) * 1.9); }
+}
+.ever-twinkle { animation: ever-twinkle 9s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  .ever-kenburns { animation: none; }
+  .ever-kenburns,
+  .ever-hero-scale { animation: none; }
   .ever-star-pulse { animation: none; opacity: 0.85; }
+  .ever-twinkle { animation: none; }
 }
 
 /* ---------------------------------------------------------------------------

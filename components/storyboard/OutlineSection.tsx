@@ -2,22 +2,22 @@
 // -----------------------------------------------------------------------------
 // components/storyboard/OutlineSection.tsx (1.2)
 //
-// The Outline, folded into the album as a section (it used to be the /storyboard
-// page — that route now redirects here). A violet hero with a multiply cover and
-// a gentle parallax; below it, the Moments.
+// The Outline, folded into the album as a section. It now uses the standard
+// SectionHeading (like every other section) for consistency, with the edit
+// toggle and the Invitation link as its heading actions.
 //
-//   View (default) — the numbered-circle timeline, auto-scrolling forever.
+//   View (default) — the numbered, star-linked Moment timeline, auto-scrolling.
 //   Edit           — the full Storyboard editor (StoryboardView), reused as-is.
 //
-// Plus a link to the shareable, read-only Invitation. An empty story shows the
-// "Outline your Storyboard" invitation-to-plan instead of a blank strip.
+// /storyboard redirects here; empty stories show the "Outline your Storyboard"
+// invitation-to-plan.
 // -----------------------------------------------------------------------------
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react';
 import { copy } from '@/lib/copy';
 import type { Chapter, Frame, Author } from '@/lib/types';
+import SectionHeading from '@/components/ui/SectionHeading';
 import StoryboardView from './StoryboardView';
 import MomentTimeline from './MomentTimeline';
 
@@ -27,75 +27,48 @@ export default function OutlineSection({
   beats,
   frames,
   authors,
-  coverUrl,
 }: {
   storyId: string;
   slug: string;
   beats: Chapter[];
   frames: Frame[];
   authors: Record<string, Author>;
-  coverUrl: string | null;
 }) {
-  const reduced = useReducedMotion();
   const [editing, setEditing] = useState(false);
-
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, (v) => (reduced ? 0 : v * 0.08));
-
   const hasBeats = beats.length > 0;
+
+  const pill =
+    'flex items-center gap-1.5 rounded-full border border-rule px-4 py-2 text-[11px] tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet';
+
+  const actions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <button type="button" onClick={() => setEditing((e) => !e)} className={pill}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+        </svg>
+        {editing ? copy.storyboard.doneOutline : copy.storyboard.editOutline}
+      </button>
+      {hasBeats && (
+        <Link href={`/story/${slug}/invitation`} className={pill}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+            <path d="M4 12a8 8 0 0 1 16 0" />
+            <path d="M12 3v9l4 2" />
+          </svg>
+          {copy.storyboard.invite}
+        </Link>
+      )}
+    </div>
+  );
 
   return (
     <section id="outline" className="mx-auto max-w-5xl scroll-mt-8 px-6 py-14">
-      {/* Hero */}
-      <div className="relative mb-8 overflow-hidden rounded-3xl bg-violet-hero">
-        <motion.div style={{ y }} className="absolute inset-0 -bottom-10">
-          {coverUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={coverUrl} alt="" className="h-full w-full object-cover opacity-40 mix-blend-multiply" />
-          )}
-        </motion.div>
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-violet-deep/80 via-violet-deep/20 to-violet-deep/40" />
-
-        <div className="relative flex flex-col items-center px-6 py-14 text-center sm:py-16">
-          <div className="mb-3 flex items-center gap-3">
-            <span className="h-px w-8 bg-ember/70" />
-            <p className="text-[10px] uppercase tracking-[0.3em] text-ember">{copy.storyboard.eyebrow}</p>
-            <span className="h-px w-8 bg-ember/70" />
-          </div>
-          <h2 className="font-serif text-4xl text-paper [text-shadow:0_2px_24px_rgba(0,0,0,0.4)] sm:text-6xl">
-            {copy.storyboard.heroTitle}
-          </h2>
-          <p className="mt-3 max-w-md text-sm italic leading-relaxed text-violet-3">
-            {copy.storyboard.tagline}
-          </p>
-
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => setEditing((e) => !e)}
-              className="flex items-center gap-1.5 rounded-full border border-white/25 bg-violet-deep/40 px-4 py-2 text-[11px] tracking-wide text-paper/90 backdrop-blur-sm transition-colors hover:border-white/50 hover:text-paper"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
-              </svg>
-              {editing ? copy.storyboard.doneOutline : copy.storyboard.editOutline}
-            </button>
-            {hasBeats && (
-              <Link
-                href={`/story/${slug}/invitation`}
-                className="flex items-center gap-1.5 rounded-full border border-white/25 bg-violet-deep/40 px-4 py-2 text-[11px] tracking-wide text-paper/90 backdrop-blur-sm transition-colors hover:border-white/50 hover:text-paper"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-                  <path d="M4 12a8 8 0 0 1 16 0" />
-                  <path d="M12 3v9l4 2" />
-                </svg>
-                {copy.storyboard.invite}
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
+      <SectionHeading
+        eyebrow={copy.storyboard.eyebrow}
+        title={copy.storyboard.sectionTitle}
+        tagline={copy.storyboard.tagline}
+        action={actions}
+      />
 
       {editing ? (
         <StoryboardView storyId={storyId} slug={slug} beats={beats} frames={frames} authors={authors} />

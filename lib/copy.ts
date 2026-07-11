@@ -151,6 +151,9 @@ export const copy = {
     changeCover: 'Change cover',
     removeCover: 'Remove cover photo',
     coverUploading: 'Keeping…',
+    // 1.2 cinematic cover hero
+    heroEyebrow: 'The Story of Us',
+    editCover: 'Edit cover',
   },
 
   // The Spotify soundtrack (1.2). We store the pasted link in stories.soundtrack
@@ -171,6 +174,13 @@ export const copy = {
     hint: 'Press play in the player to listen.',
     asNote: 'Kept as a note — paste a Spotify link for a player.',
     saveError: "That didn't save. Try again?",
+    // 1.2 custom card
+    playOnSpotify: 'Play on Spotify',
+    play: 'Play',
+    pause: 'Pause',
+    loading: 'Loading…',
+    via: 'Spotify',
+    untitledTrack: 'This story’s song',
   },
 
   storyboard: {
@@ -323,6 +333,10 @@ export const copy = {
     keepsakeCaption: 'This becomes The Keepsake — the defining image of the chapter.',
     // 1.2 — album interleave + word pair
     reflectionEyebrow: 'A reflection',
+    reflectionsTitle: 'Between the photos.',
+    reflectionsTagline: 'What we wrote to each other, looking back.',
+    prev: 'Previous',
+    next: 'Next',
     wordPairEyebrow: 'In a word',
     carouselEyebrow: 'From the story',
     earlier: 'Earlier reflections',

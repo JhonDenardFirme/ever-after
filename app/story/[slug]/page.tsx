@@ -27,12 +27,15 @@ import {
   getCurrentAuthor,
   ensureAfterwordBank,
 } from '@/lib/queries';
-import { copy } from '@/lib/copy';
+import { copy, AFTERWORD_SECTIONS } from '@/lib/copy';
+import { getSpotifyOEmbed } from '@/lib/spotify';
+import { BookIcon } from '@/components/ui/icons';
 import CoverBanner from '@/components/prologue/CoverBanner';
 import PrologueSection from '@/components/prologue/PrologueSection';
 import Soundtrack from '@/components/soundtrack/Soundtrack';
 import OutlineSection from '@/components/storyboard/OutlineSection';
-import PhotoFeed, { type Reflection } from '@/components/story/PhotoFeed';
+import PhotoFeed from '@/components/story/PhotoFeed';
+import ReflectionsCarousel, { type Reflection } from '@/components/afterword/ReflectionsCarousel';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,14 +54,23 @@ export default async function StoryPage({ params }: { params: { slug: string } }
     getAfterwordEntries(story.id),
   ]);
 
-  // Answered free-text reflections, woven between the photos.
+  // Answered free-text reflections for the carousel — both authors per question,
+  // included when at least one of them has written something.
+  const authorsOrdered = Object.values(authors).sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+  const sectionTitle = (key: string | null): string | null =>
+    AFTERWORD_SECTIONS.find((s) => s.key === key)?.title ?? null;
   const reflections: Reflection[] = questions
     .filter((q) => q.answer_kind === 'text')
     .map((q) => {
-      const answers = entries
-        .filter((e) => e.question_id === q.id && e.answer_text && e.answer_text.trim())
-        .map((e) => ({ name: authors[e.author_id]?.name ?? '', text: e.answer_text as string }));
-      return answers.length ? { id: q.id, question: q.question, answers } : null;
+      const answers = authorsOrdered.map((a) => {
+        const e = entries.find(
+          (x) => x.question_id === q.id && x.author_id === a.id && x.answer_text && x.answer_text.trim()
+        );
+        return { name: a.name, text: e ? (e.answer_text as string) : null };
+      });
+      return answers.some((a) => a.text)
+        ? { id: q.id, question: q.question, section: sectionTitle(q.section), answers }
+        : null;
     })
     .filter((r): r is Reflection => r !== null);
 
@@ -86,39 +98,50 @@ export default async function StoryPage({ params }: { params: { slug: string } }
     }
   }
 
+  // ---- Cover-hero metadata (statistics live on the Library frontispiece) ----
+  let dateLine: string | null = null;
+  if (story.starts_on) {
+    const f = new Date(story.starts_on);
+    const full: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+    if (story.ends_on && story.ends_on !== story.starts_on) {
+      const t = new Date(story.ends_on);
+      dateLine =
+        f.getMonth() === t.getMonth() && f.getFullYear() === t.getFullYear()
+          ? `${f.toLocaleDateString('en-PH', { month: 'long', day: 'numeric' })}–${t.getDate()}, ${f.getFullYear()}`
+          : `${f.toLocaleDateString('en-PH', full)} – ${t.toLocaleDateString('en-PH', full)}`;
+    } else {
+      dateLine = f.toLocaleDateString('en-PH', full);
+    }
+  }
+  const authorNames = Object.values(authors).map((a) => a.name).filter(Boolean).join(' & ');
+  const metaParts = [dateLine, story.setting, authorNames || null].filter(Boolean) as string[];
+
+  // Album art + title for the custom Spotify card (oEmbed, no auth; may be null).
+  const soundtrackMeta = await getSpotifyOEmbed(story.soundtrack);
+
+  // A few photos for the epigraph banner to cross-fade through (not the whole set).
+  const photoPool = frames
+    .filter((f) => f.status === 'developed' && f.media_url && f.media_type !== 'video')
+    .map((f) => f.media_url as string);
+  let bannerPhotos = photoPool.length <= 3 ? photoPool : [...photoPool].sort(() => Math.random() - 0.5).slice(0, 3);
+  if (bannerPhotos.length === 0 && coverUrl) bannerPhotos = [coverUrl];
+
   return (
     <main className="min-h-dvh">
-      {/* Back link floats over the cover (strip is click-through so it never
-          obstructs the cover menu). */}
-      <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 px-6 py-5">
-        <Link
-          href="/library"
-          className="pointer-events-auto text-[11px] uppercase tracking-[0.2em] text-paper/70 transition-colors hover:text-paper"
-        >
-          ← {copy.prologue.back}
-        </Link>
-      </div>
-
       <CoverBanner
         storyId={story.id}
         slug={story.slug}
         coverUrl={coverUrl}
         title={story.title || copy.library.untitled}
-        theme={story.theme}
+        subtitle={copy.prologue.sectionTitle}
+        metaParts={metaParts}
       />
 
-      <PrologueSection story={story} coverUrl={coverUrl} />
+      <PrologueSection story={story} bannerPhotos={bannerPhotos} />
 
-      <Soundtrack storyId={story.id} slug={story.slug} soundtrack={story.soundtrack} />
+      <Soundtrack storyId={story.id} slug={story.slug} soundtrack={story.soundtrack} meta={soundtrackMeta} />
 
-      <OutlineSection
-        storyId={story.id}
-        slug={story.slug}
-        beats={chapters}
-        frames={frames}
-        authors={authors}
-        coverUrl={coverUrl}
-      />
+      <OutlineSection storyId={story.id} slug={story.slug} beats={chapters} frames={frames} authors={authors} />
 
       <PhotoFeed
         storyId={story.id}
@@ -128,8 +151,10 @@ export default async function StoryPage({ params }: { params: { slug: string } }
         keepsakes={keepsakes}
         myKeepsakeFrameId={myKeepsakeFrameId}
         authors={authors}
-        reflections={reflections}
       />
+
+      {/* The answered reflections, as an auto-cycling story-style carousel. */}
+      <ReflectionsCarousel reflections={reflections} />
 
       {/* The one-word pair — the two answers together, just above the export. */}
       {wordAnswers.length > 0 && (
@@ -166,8 +191,9 @@ export default async function StoryPage({ params }: { params: { slug: string } }
         <div className="border-t border-rule pt-10">
           <Link
             href={`/story/${story.slug}/print`}
-            className="inline-block rounded-full bg-violet px-8 py-4 text-sm tracking-wide text-paper shadow-glow-soft transition-colors hover:bg-violet-2"
+            className="inline-flex items-center gap-2 rounded-full bg-ever-gradient px-8 py-4 text-sm tracking-wide text-paper shadow-glow transition-opacity hover:opacity-90"
           >
+            <BookIcon size={16} />
             {copy.print.action}
           </Link>
           <p className="mt-3 text-xs italic text-ink-soft">{copy.print.hint}</p>
