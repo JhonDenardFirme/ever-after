@@ -31,6 +31,13 @@ import PhotoLightbox from './PhotoLightbox';
 
 type Group = { label: string | null; frames: Frame[] };
 
+/** An answered Afterword reflection, woven between the photos. */
+export type Reflection = { id: string; question: string; answers: { name: string; text: string }[] };
+
+type FeedItem = { kind: 'frame'; frame: Frame } | { kind: 'reflection'; reflection: Reflection };
+
+const REFLECTION_STRIDE = 4; // drop a reflection card after every N photos
+
 /**
  * Orientation buckets: portrait / square / landscape. Frames keep their
  * orientation but snap to one of three tidy ratios, so sizing stays consistent
@@ -43,20 +50,33 @@ function bucketRatio(f: Frame): number {
   return 1; // square-ish
 }
 
+/** "Denard's Keepsake" / "Denard's & Airhyl's Keepsake". */
+function keepsakeLabel(names: string[]): string {
+  const valid = names.filter(Boolean);
+  if (valid.length === 0) return copy.frames.keepsake;
+  if (valid.length === 1) return copy.frames.keepsakeOf(valid[0]);
+  return `${valid.map((n) => `${n}’s`).join(' & ')} ${copy.frames.keepsake}`;
+}
+
 export default function PhotoFeed({
   storyId,
   slug,
   chapters,
   frames,
-  keepsakeId,
+  keepsakes,
+  myKeepsakeFrameId,
   authors,
+  reflections = [],
 }: {
   storyId: string;
   slug: string;
   chapters: Chapter[];
   frames: Frame[];
-  keepsakeId: string | null;
+  /** frameId → the author name(s) whose Keepsake it is. */
+  keepsakes: Record<string, string[]>;
+  myKeepsakeFrameId: string | null;
   authors: Record<string, Author>;
+  reflections?: Reflection[];
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -92,7 +112,8 @@ export default function PhotoFeed({
   const open = openId ? developed.find((f) => f.id === openId) ?? null : null;
 
   function Tile({ frame }: { frame: Frame }) {
-    const isKeepsake = frame.id === keepsakeId;
+    const keepsakeNames = keepsakes[frame.id];
+    const isKeepsake = !!keepsakeNames?.length;
     return (
       <button
         type="button"
@@ -128,7 +149,7 @@ export default function PhotoFeed({
 
         {isKeepsake && (
           <span className="absolute left-3 top-3">
-            <StarBadge label={copy.frames.keepsake} />
+            <StarBadge label={keepsakeLabel(keepsakeNames)} />
           </span>
         )}
 
@@ -139,6 +160,46 @@ export default function PhotoFeed({
           </span>
         )}
       </button>
+    );
+  }
+
+  // Weave answered reflections through the feed: one after every few photos,
+  // drawn from a shared queue so they spread across the sets. Leftovers land in
+  // the final group.
+  const queue = reflections.slice(0, 8);
+  let qi = 0;
+  const groupsRender = groups.map((g) => {
+    const items: FeedItem[] = [];
+    g.frames.forEach((f, i) => {
+      items.push({ kind: 'frame', frame: f });
+      if ((i + 1) % REFLECTION_STRIDE === 0 && qi < queue.length) {
+        items.push({ kind: 'reflection', reflection: queue[qi++] });
+      }
+    });
+    return { label: g.label, items };
+  });
+  if (groupsRender.length > 0) {
+    while (qi < queue.length) {
+      groupsRender[groupsRender.length - 1].items.push({ kind: 'reflection', reflection: queue[qi++] });
+    }
+  }
+
+  function ReflectionCard({ r }: { r: Reflection }) {
+    return (
+      <div className="mb-4 break-inside-avoid rounded-2xl bg-violet-hero p-5 text-paper shadow-glow-soft ring-1 ring-inset ring-white/10">
+        <p className="mb-2 text-[10px] uppercase tracking-[0.24em] text-violet-3">
+          {copy.afterword.reflectionEyebrow}
+        </p>
+        <p className="font-serif text-lg italic leading-snug text-paper/90">{r.question}</p>
+        <div className="mt-3 space-y-3">
+          {r.answers.map((a, i) => (
+            <div key={i}>
+              <p className="font-serif text-base leading-snug">{a.text}</p>
+              <p className="mt-0.5 text-[10px] uppercase tracking-[0.16em] text-violet-3">— {a.name}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -181,7 +242,7 @@ export default function PhotoFeed({
         </p>
       ) : (
         <div className="space-y-14">
-          {groups.map((group, gi) => (
+          {groupsRender.map((group, gi) => (
             <div key={group.label ?? `__unlabeled-${gi}`}>
               {/* A labeled set gets a header + its own upload button. The
                   unlabeled group renders with neither. */}
@@ -210,9 +271,13 @@ export default function PhotoFeed({
               )}
 
               <div className="columns-2 gap-4 sm:columns-3">
-                {group.frames.map((frame) => (
-                  <Tile key={frame.id} frame={frame} />
-                ))}
+                {group.items.map((item) =>
+                  item.kind === 'frame' ? (
+                    <Tile key={item.frame.id} frame={item.frame} />
+                  ) : (
+                    <ReflectionCard key={`r-${item.reflection.id}`} r={item.reflection} />
+                  )
+                )}
               </div>
             </div>
           ))}
@@ -223,7 +288,8 @@ export default function PhotoFeed({
         <PhotoLightbox
           frame={open}
           authors={authors}
-          isKeepsake={open.id === keepsakeId}
+          keepsakeNames={keepsakes[open.id] ?? []}
+          mine={open.id === myKeepsakeFrameId}
           storyId={storyId}
           slug={slug}
           onClose={() => setOpenId(null)}

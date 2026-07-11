@@ -76,7 +76,7 @@ export default function StoryboardView({
           {copy.storyboard.empty}
         </p>
       ) : (
-        <div className="mb-12 rounded-2xl border border-rule bg-paper2/40 px-6 py-8 sm:px-10">
+        <div className="mb-12 overflow-x-auto rounded-2xl border border-rule bg-paper2/40 px-6 py-8 sm:px-10">
           <Timeline beats={beats} slug={slug} activeId={activeId} onSelect={setActiveId} />
         </div>
       )}

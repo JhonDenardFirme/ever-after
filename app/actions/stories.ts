@@ -67,6 +67,7 @@ export async function createStory(title: string): Promise<Result<{ slug: string 
       DEFAULT_AFTERWORD_QUESTIONS.map((q, i) => ({
         story_id: story.id,
         question: q.question,
+        section: q.section,
         answer_kind: q.answer_kind,
         sort_order: i + 1,
       }))

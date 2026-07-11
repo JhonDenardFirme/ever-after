@@ -106,14 +106,14 @@ export default function ProfileMenu({
           />
           <div
             role="menu"
-            className="absolute right-0 z-50 mt-3 w-64 overflow-hidden rounded-2xl border border-rule bg-paper2 shadow-glow"
+            className="absolute right-0 z-50 mt-3 w-64 overflow-hidden rounded-2xl border border-white/15 bg-violet-deep/75 text-paper shadow-glow backdrop-blur-xl"
           >
-            <div className="border-b border-rule px-5 py-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-ink-soft">
+            <div className="border-b border-white/10 px-5 py-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-violet-3">
                 {copy.nav.profileEyebrow}
               </p>
-              <p className="mt-1 truncate font-serif text-lg text-ink">{name}</p>
-              <p className="truncate text-xs text-ink-soft">{email}</p>
+              <p className="mt-1 truncate font-serif text-lg text-paper">{name}</p>
+              <p className="truncate text-xs text-violet-3">{email}</p>
             </div>
 
             <div className="p-2">
@@ -132,7 +132,7 @@ export default function ProfileMenu({
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 disabled={pending}
-                className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-ink transition-colors hover:bg-paper disabled:opacity-60"
+                className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-paper/90 transition-colors hover:bg-white/10 disabled:opacity-60"
               >
                 {pending ? copy.nav.profileUploading : copy.nav.editProfile}
               </button>
@@ -140,7 +140,7 @@ export default function ProfileMenu({
               <a
                 href="#shelf"
                 onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-2.5 text-left text-sm text-ink transition-colors hover:bg-paper"
+                className="block rounded-lg px-3 py-2.5 text-left text-sm text-paper/90 transition-colors hover:bg-white/10"
               >
                 {copy.nav.jumpToShelf}
               </a>
@@ -148,7 +148,7 @@ export default function ProfileMenu({
               <form action={signOutAction}>
                 <button
                   type="submit"
-                  className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-ink-soft transition-colors hover:bg-paper hover:text-ember"
+                  className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-violet-3 transition-colors hover:bg-white/10 hover:text-ember"
                 >
                   {copy.nav.signOut}
                 </button>
@@ -156,7 +156,7 @@ export default function ProfileMenu({
             </div>
 
             {error && (
-              <p role="alert" className="border-t border-rule px-5 py-2 text-xs text-ember">
+              <p role="alert" className="border-t border-white/10 px-5 py-2 text-xs text-ember">
                 {error}
               </p>
             )}

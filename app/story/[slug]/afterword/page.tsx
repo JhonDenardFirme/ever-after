@@ -1,13 +1,14 @@
 // -----------------------------------------------------------------------------
-// app/story/[slug]/afterword/page.tsx — The Afterword.
+// app/story/[slug]/afterword/page.tsx — The Afterword (1.2 rebuild).
 //
-// The reflection, written after the story is lived. Eight questions, seeded
-// when the story was created (see createStory), so this page never has to
-// generate anything.
+// Its own page, reachable from the album. A violet hero, an auto-carousel of the
+// story's photographs, then the four-section question bank (Keepsake / Looking
+// Back / Looking Within / Looking Ahead). Both authors answer independently
+// (unique(question_id, author_id)); it all reflects on refresh.
 //
-// Both of us can answer every question. `unique (question_id, author_id)`
-// means our answers can't collide — you write your row, she writes hers, they
-// render side by side. No locking, no merge, no last-write-wins.
+// Existing stories are backfilled with the new bank idempotently
+// (ensureAfterwordBank); any older, section-less questions that were answered
+// still show, grouped last, so nothing written before the rebuild is lost.
 // -----------------------------------------------------------------------------
 
 import Link from 'next/link';
@@ -19,9 +20,14 @@ import {
   getFramesForStory,
   getAuthorsById,
   getCurrentAuthor,
+  getCoverUrl,
+  ensureAfterwordBank,
 } from '@/lib/queries';
-import { copy } from '@/lib/copy';
+import { copy, AFTERWORD_SECTIONS } from '@/lib/copy';
 import QuestionCard from '@/components/afterword/QuestionCard';
+import AfterwordCarousel from '@/components/afterword/AfterwordCarousel';
+import SectionHeading from '@/components/ui/SectionHeading';
+import type { AfterwordQuestion } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,78 +36,104 @@ export default async function AfterwordPage({ params }: { params: { slug: string
   if (!story) notFound();
 
   const me = await getCurrentAuthor();
-  // Middleware guarantees a session; this guards the authors-table mismatch.
   if (!me) redirect('/signin');
 
-  const [questions, entries, frames, authors] = await Promise.all([
+  // Make sure the story has the four-section bank (backfills older stories once).
+  await ensureAfterwordBank(story.id);
+
+  const [questions, entries, frames, authors, coverUrl] = await Promise.all([
     getAfterwordQuestions(story.id),
     getAfterwordEntries(story.id),
     getFramesForStory(story.id),
     getAuthorsById(),
+    getCoverUrl(story),
   ]);
 
-  // The other author, if there is one. Ever After is built for two.
   const theirAuthor = Object.values(authors).find((a) => a.id !== me.id) ?? null;
 
+  const cardFor = (question: AfterwordQuestion, index: number) => (
+    <QuestionCard
+      key={question.id}
+      question={question}
+      storyId={story.id}
+      slug={story.slug}
+      index={index + 1}
+      me={me}
+      theirAuthor={theirAuthor}
+      mine={entries.find((e) => e.question_id === question.id && e.author_id === me.id) ?? null}
+      theirs={
+        theirAuthor
+          ? entries.find((e) => e.question_id === question.id && e.author_id === theirAuthor.id) ?? null
+          : null
+      }
+      frames={frames}
+    />
+  );
+
+  // Old, section-less questions that were actually answered — keep them visible.
+  const legacyAnswered = questions.filter(
+    (q) => !q.section && entries.some((e) => e.question_id === q.id)
+  );
+
   return (
-    <main className="mx-auto min-h-dvh max-w-3xl px-6 py-12 sm:py-16">
-      <header className="mb-14">
-        <Link
-          href={`/story/${story.slug}`}
-          className="mb-8 inline-block text-[11px] uppercase tracking-[0.2em] text-ink-soft transition-colors hover:text-violet"
-        >
-          ← {story.title}
-        </Link>
-
-        <p className="mb-2 text-[10px] uppercase tracking-[0.3em] text-ember">
-          {copy.afterword.eyebrow}
-        </p>
-        <h1 className="mb-3 font-serif text-4xl text-ink sm:text-5xl">
-          {copy.afterword.title}
-        </h1>
-        <p className="max-w-md text-sm leading-relaxed text-ink-soft">
-          {copy.afterword.lead}
-        </p>
-      </header>
-
-      {questions.length === 0 ? (
-        <p className="py-24 text-center font-serif text-xl italic text-ink-soft">
-          {copy.afterword.empty}
-        </p>
-      ) : (
-        <div>
-          {questions.map((question, i) => (
-            <QuestionCard
-              key={question.id}
-              question={question}
-              storyId={story.id}
-              slug={story.slug}
-              index={i + 1}
-              me={me}
-              theirAuthor={theirAuthor}
-              mine={entries.find((e) => e.question_id === question.id && e.author_id === me.id) ?? null}
-              theirs={
-                theirAuthor
-                  ? entries.find(
-                      (e) => e.question_id === question.id && e.author_id === theirAuthor.id
-                    ) ?? null
-                  : null
-              }
-              frames={frames}
-            />
-          ))}
+    <main className="min-h-dvh">
+      {/* Hero — thinner than the album cover (this is an inside page), and it
+          dissolves into the paper at the base, same as the Fleeting Frames cover. */}
+      <div className="relative flex min-h-[32vh] items-center justify-center overflow-hidden bg-violet-hero px-6 text-center sm:min-h-[38vh]">
+        {coverUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-multiply" />
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-violet-deep/80 via-violet-deep/20 to-violet-deep/45" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-paper to-transparent" />
+        <div className="relative">
+          <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-ember">{copy.afterword.eyebrow}</p>
+          <h1 className="font-serif text-5xl text-paper [text-shadow:0_2px_30px_rgba(0,0,0,0.5)] sm:text-7xl">
+            {copy.afterword.title}
+          </h1>
+          <p className="mx-auto mt-5 max-w-md text-sm italic leading-relaxed text-violet-3">
+            {copy.afterword.tagline}
+          </p>
         </div>
-      )}
+      </div>
 
-      {/* Develop moved to the album's foot in 1.2 — from here, just a way back. */}
-      <div className="mt-16 border-t border-rule pt-10 text-center">
+      <section className="mx-auto max-w-3xl px-6 py-14">
         <Link
           href={`/story/${story.slug}`}
-          className="inline-block rounded-full border border-rule px-7 py-3.5 text-sm tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
+          className="mb-10 inline-block text-[11px] uppercase tracking-[0.2em] text-ink-soft transition-colors hover:text-violet"
         >
           ← {story.title}
         </Link>
-      </div>
+
+        <AfterwordCarousel frames={frames} />
+
+        {AFTERWORD_SECTIONS.map((section) => {
+          const inSection = questions.filter((q) => q.section === section.key);
+          if (inSection.length === 0) return null;
+          return (
+            <div key={section.key} className="mb-20">
+              <SectionHeading align="center" title={section.title} tagline={section.blurb} />
+              {inSection.map((q, i) => cardFor(q, i))}
+            </div>
+          );
+        })}
+
+        {legacyAnswered.length > 0 && (
+          <div className="mb-8">
+            <p className="mb-6 text-[10px] uppercase tracking-[0.3em] text-ink-soft">{copy.afterword.earlier}</p>
+            {legacyAnswered.map((q, i) => cardFor(q, i))}
+          </div>
+        )}
+
+        <div className="mt-8 border-t border-rule pt-10 text-center">
+          <Link
+            href={`/story/${story.slug}`}
+            className="inline-block rounded-full border border-rule px-7 py-3.5 text-sm tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
+          >
+            ← {story.title}
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

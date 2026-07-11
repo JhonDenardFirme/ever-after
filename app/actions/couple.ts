@@ -27,6 +27,8 @@ const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // post-compression sanity ceiling
 const EDITABLE = [
   'headline',
   'story',
+  'since',
+  'dedication',
   'member_one_name',
   'member_one_note',
   'member_two_name',
@@ -69,8 +71,8 @@ export async function saveCouple(input: CoupleInput): Promise<Result<Couple>> {
   });
 }
 
-/** Upload one member's photo. `which` is 'one' | 'two'. */
-export async function uploadCouplePhoto(which: 'one' | 'two', formData: FormData): Promise<Result<Couple>> {
+/** Upload the frontispiece hero photograph. Deterministic path + cache-bust. */
+export async function uploadCoupleHero(formData: FormData): Promise<Result<Couple>> {
   return attempt(async () => {
     await requireAuthor();
 
@@ -80,7 +82,7 @@ export async function uploadCouplePhoto(which: 'one' | 'two', formData: FormData
     if (file.size > MAX_IMAGE_BYTES) return { ok: false, error: copy.frames.tooLarge };
 
     const db = supabaseAdmin();
-    const path = `couple/member-${which}`;
+    const path = 'couple/hero';
     const bytes = await file.arrayBuffer();
 
     const { error: uploadError } = await db.storage
@@ -93,17 +95,83 @@ export async function uploadCouplePhoto(which: 'one' | 'two', formData: FormData
     } = db.storage.from(BUCKET).getPublicUrl(path);
     const bustedUrl = `${publicUrl}?v=${Date.now()}`;
 
-    const column = which === 'one' ? 'member_one_photo_url' : 'member_two_photo_url';
     const { data, error } = await db
       .from('couple')
-      .upsert({ id: 1, [column]: bustedUrl, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+      .upsert({ id: 1, hero_image_url: bustedUrl, updated_at: new Date().toISOString() }, { onConflict: 'id' })
       .select('*')
       .single();
-
     if (error || !data) return { ok: false, error: error?.message ?? copy.couple.saveError };
 
     revalidatePath('/library');
     return { ok: true, data: data as Couple };
+  });
+}
+
+/** Remove the frontispiece hero photograph (row first, then the object). */
+export async function removeCoupleHero(): Promise<Result<Couple>> {
+  return attempt(async () => {
+    await requireAuthor();
+    const db = supabaseAdmin();
+
+    const { data, error } = await db
+      .from('couple')
+      .upsert({ id: 1, hero_image_url: null, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+      .select('*')
+      .single();
+    if (error || !data) return { ok: false, error: error?.message ?? copy.couple.saveError };
+
+    const { error: storageError } = await db.storage.from(BUCKET).remove(['couple/hero']);
+    if (storageError) console.error('[removeCoupleHero] orphaned object:', storageError.message);
+
+    revalidatePath('/library');
+    return { ok: true, data: data as Couple };
+  });
+}
+
+/** Set the hero's focal point (percent 0–100) so crops keep the subject. */
+export async function setCoupleHeroFocus(x: number, y: number): Promise<Result<Couple>> {
+  return attempt(async () => {
+    await requireAuthor();
+    const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+
+    const { data, error } = await supabaseAdmin()
+      .from('couple')
+      .upsert(
+        { id: 1, hero_focus_x: clamp(x), hero_focus_y: clamp(y), updated_at: new Date().toISOString() },
+        { onConflict: 'id' }
+      )
+      .select('*')
+      .single();
+    if (error || !data) return { ok: false, error: error?.message ?? copy.couple.saveError };
+
+    revalidatePath('/library');
+    return { ok: true, data: data as Couple };
+  });
+}
+
+/**
+ * Update the signed-in author's own name + nickname (from the frontispiece
+ * profile block). Guarded to self — requireAuthor gives the row we may touch.
+ */
+export async function updateAuthorProfile(
+  name: string,
+  nickname: string
+): Promise<Result<{ name: string; nickname: string | null }>> {
+  return attempt(async () => {
+    const author = await requireAuthor();
+
+    const cleanName = name.trim();
+    if (!cleanName) return { ok: false, error: copy.validation.nameNeeded };
+    const cleanNick = nickname.trim() || null;
+
+    const { error } = await supabaseAdmin()
+      .from('authors')
+      .update({ name: cleanName, nickname: cleanNick })
+      .eq('id', author.id);
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath('/library');
+    return { ok: true, data: { name: cleanName, nickname: cleanNick } };
   });
 }
 

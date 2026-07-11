@@ -18,6 +18,7 @@ import { updateChapter, deleteChapter, type ChapterField } from '@/app/actions/c
 import { toLocalInputValue, fromLocalInputValue } from '@/lib/beats';
 import { copy } from '@/lib/copy';
 import type { Chapter, BeatType } from '@/lib/types';
+import { TrashIcon } from '@/components/ui/icons';
 import BeatIcon from './BeatIcon';
 
 const TYPES: BeatType[] = ['travel', 'arrival', 'activity', 'meal', 'rest', 'other'];
@@ -179,8 +180,11 @@ export default function BeatEditor({ beat, slug }: { beat: Chapter; slug: string
           <button
             type="button"
             onClick={() => setConfirming(true)}
-            className="text-xs text-ink-soft underline-offset-4 transition-colors hover:text-ember hover:underline"
+            aria-label={copy.storyboard.deleteBeat}
+            title={copy.storyboard.deleteBeat}
+            className="flex items-center gap-1.5 rounded-full border border-rule px-3 py-1.5 text-xs text-ink-soft transition-colors hover:border-ember hover:text-ember"
           >
+            <TrashIcon size={13} />
             {copy.storyboard.deleteBeat}
           </button>
         )}

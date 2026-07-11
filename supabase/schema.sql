@@ -24,10 +24,15 @@ create table if not exists authors (
 -- The couple hero on The Library (1.2). Single row, enforced by check (id = 1).
 create table if not exists couple (
   id                   int primary key default 1 check (id = 1),
-  headline             text,   -- "Denard & Airhyl"
-  story                text,   -- a short paragraph about the two of them
-  member_one_name      text,
-  member_one_note      text,   -- their little "Hi, I'm ..." line
+  headline             text,   -- the relationship title, "Denard & Airhyl"
+  story                text,   -- the editorial statement on the frontispiece
+  hero_image_url       text,   -- 1.2: the frontispiece hero photograph
+  hero_focus_x         int default 50, -- focal point (percent) for cropping
+  hero_focus_y         int default 50,
+  since                date,   -- "Since 2024"
+  dedication           text,   -- an optional closing line
+  member_one_name      text,   -- (legacy; authors table now supplies names/avatars)
+  member_one_note      text,
   member_one_photo_url text,
   member_two_name      text,
   member_two_note      text,
@@ -73,6 +78,7 @@ create table if not exists chapters (
 create table if not exists frames (
   id            uuid primary key default gen_random_uuid(),
   chapter_id    uuid references chapters(id) on delete set null,
+  story_id      uuid references stories(id) on delete cascade, -- 1.2: story-level Frames (Keepsake upload) with no Moment
   media_url     text,                           -- null while waiting
   media_type    text not null default 'image'
                 check (media_type in ('image','video')),
@@ -105,7 +111,8 @@ create table if not exists afterword_questions (
   id          uuid primary key default gen_random_uuid(),
   story_id    uuid not null references stories(id) on delete cascade,
   question    text not null,
-  answer_kind text not null default 'text' check (answer_kind in ('text','frame','word')),
+  section     text,                             -- 1.2: keepsake | back | within | ahead
+  answer_kind text not null default 'text' check (answer_kind in ('text','frame','word','rating')),
   sort_order  int not null default 0
 );
 
@@ -122,6 +129,7 @@ create table if not exists afterword_entries (
 -- Useful indexes
 create index if not exists idx_chapters_story on chapters(story_id, sort_order);
 create index if not exists idx_frames_chapter on frames(chapter_id, sort_order);
+create index if not exists idx_frames_story on frames(story_id);
 create index if not exists idx_aw_questions_story on afterword_questions(story_id, sort_order);
 
 -- ============================================================

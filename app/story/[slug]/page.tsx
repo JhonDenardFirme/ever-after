@@ -1,17 +1,16 @@
 // -----------------------------------------------------------------------------
 // app/story/[slug]/page.tsx — The Fleeting Frames (the album). (1.2)
 //
-// The consolidated album page. Server Component: fetches the story, its cover,
-// its Moments, its Frames, and both authors, then composes the sections:
+// The consolidated album. Server Component: fetches the story, its cover, its
+// Moments, its Frames, both authors, and the Afterword, then composes:
 //
-//   Cover banner → Prologue (view by default) → Soundtrack → The Story feed
-//   → a way through to the Outline + Afterword → Develop, at the foot.
+//   Cover → Prologue → Soundtrack → The Outline → The Story (with the answered
+//   reflections woven between the photos) → the one-word pair → Develop.
 //
-// The Outline still lives at /storyboard and the Afterword at /afterword for
-// now (they fold in / get their rebuild in Batch 3); the links below keep them
-// reachable. The Develop button has moved here from the Afterword, per the brief.
+// The Afterword still has its own page (linked below); its answered reflections
+// and the closing one-word question surface here, on the album, per the brief.
 //
-// force-dynamic: an edited field, a new cover, or a freshly developed Frame must
+// force-dynamic: an edit, a new cover, a developed Frame, or a fresh answer must
 // appear immediately.
 // -----------------------------------------------------------------------------
 
@@ -23,12 +22,17 @@ import {
   getChapters,
   getFramesForStory,
   getAuthorsById,
+  getAfterwordQuestions,
+  getAfterwordEntries,
+  getCurrentAuthor,
+  ensureAfterwordBank,
 } from '@/lib/queries';
 import { copy } from '@/lib/copy';
 import CoverBanner from '@/components/prologue/CoverBanner';
 import PrologueSection from '@/components/prologue/PrologueSection';
 import Soundtrack from '@/components/soundtrack/Soundtrack';
-import PhotoFeed from '@/components/story/PhotoFeed';
+import OutlineSection from '@/components/storyboard/OutlineSection';
+import PhotoFeed, { type Reflection } from '@/components/story/PhotoFeed';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,18 +40,56 @@ export default async function StoryPage({ params }: { params: { slug: string } }
   const story = await getStoryBySlug(params.slug);
   if (!story) notFound();
 
-  const [coverUrl, chapters, frames, authors] = await Promise.all([
+  await ensureAfterwordBank(story.id);
+
+  const [coverUrl, chapters, frames, authors, questions, entries] = await Promise.all([
     getCoverUrl(story),
     getChapters(story.id),
     getFramesForStory(story.id),
     getAuthorsById(),
+    getAfterwordQuestions(story.id),
+    getAfterwordEntries(story.id),
   ]);
+
+  // Answered free-text reflections, woven between the photos.
+  const reflections: Reflection[] = questions
+    .filter((q) => q.answer_kind === 'text')
+    .map((q) => {
+      const answers = entries
+        .filter((e) => e.question_id === q.id && e.answer_text && e.answer_text.trim())
+        .map((e) => ({ name: authors[e.author_id]?.name ?? '', text: e.answer_text as string }));
+      return answers.length ? { id: q.id, question: q.question, answers } : null;
+    })
+    .filter((r): r is Reflection => r !== null);
+
+  // The closing one-word question, both answers, shown just above Develop.
+  const wordQ = questions.find((q) => q.answer_kind === 'word');
+  const wordAnswers = wordQ
+    ? entries
+        .filter((e) => e.question_id === wordQ.id && e.answer_text && e.answer_text.trim())
+        .map((e) => ({ name: authors[e.author_id]?.name ?? '', word: e.answer_text as string }))
+    : [];
+
+  // Per-author Keepsakes, from the Keepsake question's Frame answers.
+  const me = await getCurrentAuthor();
+  const keepsakeQ =
+    questions.find((q) => q.answer_kind === 'frame' && q.section === 'keepsake') ??
+    questions.find((q) => q.answer_kind === 'frame');
+  const keepsakes: Record<string, string[]> = {};
+  let myKeepsakeFrameId: string | null = null;
+  if (keepsakeQ) {
+    for (const e of entries) {
+      if (e.question_id === keepsakeQ.id && e.answer_frame_id) {
+        (keepsakes[e.answer_frame_id] ??= []).push(authors[e.author_id]?.name ?? '');
+        if (me && e.author_id === me.id) myKeepsakeFrameId = e.answer_frame_id;
+      }
+    }
+  }
 
   return (
     <main className="min-h-dvh">
-      {/* Back link floats over the cover. The strip itself is click-through
-          (pointer-events-none) so it never obstructs the cover menu; only the
-          link is interactive. */}
+      {/* Back link floats over the cover (strip is click-through so it never
+          obstructs the cover menu). */}
       <div className="pointer-events-none absolute left-0 right-0 top-0 z-10 px-6 py-5">
         <Link
           href="/library"
@@ -69,39 +111,57 @@ export default async function StoryPage({ params }: { params: { slug: string } }
 
       <Soundtrack storyId={story.id} slug={story.slug} soundtrack={story.soundtrack} />
 
+      <OutlineSection
+        storyId={story.id}
+        slug={story.slug}
+        beats={chapters}
+        frames={frames}
+        authors={authors}
+        coverUrl={coverUrl}
+      />
+
       <PhotoFeed
         storyId={story.id}
         slug={story.slug}
         chapters={chapters}
         frames={frames}
-        keepsakeId={story.keepsake_frame_id}
+        keepsakes={keepsakes}
+        myKeepsakeFrameId={myKeepsakeFrameId}
         authors={authors}
+        reflections={reflections}
       />
 
-      {/* Onward — the Outline and the Afterword (fold in during Batch 3) */}
-      <div className="mx-auto grid max-w-2xl gap-3 px-6 pb-6 sm:grid-cols-2">
-        <Link
-          href={`/story/${story.slug}/storyboard`}
-          className="block rounded-2xl border border-rule bg-paper2 px-6 py-5 text-center transition-colors hover:border-violet-2"
-        >
-          <p className="mb-1 text-[10px] uppercase tracking-[0.24em] text-ink-soft">
-            {copy.storyboard.eyebrow}
+      {/* The one-word pair — the two answers together, just above the export. */}
+      {wordAnswers.length > 0 && (
+        <section className="mx-auto max-w-2xl px-6 py-10 text-center">
+          <p className="mb-6 text-[10px] uppercase tracking-[0.3em] text-ember">
+            {copy.afterword.wordPairEyebrow}
           </p>
-          <p className="font-serif text-xl text-ink">{copy.prologue.toStoryboard}</p>
-        </Link>
+          <div className="flex flex-wrap items-start justify-center gap-12">
+            {wordAnswers.map((a, i) => (
+              <div key={i}>
+                <p className="bg-ever-gradient bg-clip-text font-serif text-4xl italic text-transparent sm:text-5xl">
+                  {a.word}
+                </p>
+                <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-ink-soft">— {a.name}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
+      {/* Onward to the Afterword (its own page). */}
+      <div className="mx-auto max-w-2xl px-6 pb-4">
         <Link
           href={`/story/${story.slug}/afterword`}
           className="block rounded-2xl border border-rule bg-paper2 px-6 py-5 text-center transition-colors hover:border-violet-2"
         >
-          <p className="mb-1 text-[10px] uppercase tracking-[0.24em] text-ember">
-            {copy.afterword.eyebrow}
-          </p>
+          <p className="mb-1 text-[10px] uppercase tracking-[0.24em] text-ember">{copy.afterword.eyebrow}</p>
           <p className="font-serif text-xl text-ink">{copy.afterword.toAfterword}</p>
         </Link>
       </div>
 
-      {/* Develop — the whole thing, for paper. Now lives at the album's foot. */}
+      {/* Develop — the whole thing, for paper. At the album's foot. */}
       <div className="mx-auto max-w-2xl px-6 pb-24 pt-6 text-center">
         <div className="border-t border-rule pt-10">
           <Link

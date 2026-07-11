@@ -1,47 +1,58 @@
 'use client';
 // -----------------------------------------------------------------------------
-// components/afterword/QuestionCard.tsx
+// components/afterword/QuestionCard.tsx (1.2)
 //
-// One question, and up to two answers — yours (editable) and theirs
-// (read-only, signed). `unique (question_id, author_id)` in the schema is what
-// makes that shape possible without any locking or merge logic: you can only
-// ever write your own row.
+// One question, up to two answers — yours (editable) and theirs (read-only,
+// signed). Four shapes now, by answer_kind:
+//   'text'   a paragraph
+//   'word'   one word → the story's Theme
+//   'rating' a light 1–5 star answer
+//   'frame'  the Keepsake — an uploaded photograph (KeepsakeUpload)
 //
-// Three shapes, chosen by `answer_kind`:
-//   'text'  a paragraph
-//   'word'  a single word, which becomes the story's Theme
-//   'frame' a photograph, which becomes The Keepsake
-//
-// Answers save on blur, silently, like Captions. The signature is the
-// confirmation — you see your name and the date appear, and that says "kept"
-// better than a toast ever would.
+// unique(question_id, author_id) still does all the concurrency work: you only
+// ever write your own row, and the two answers render side by side.
 // -----------------------------------------------------------------------------
 
 import { useState, useTransition } from 'react';
 import { answerQuestion } from '@/app/actions/afterword';
 import { copy } from '@/lib/copy';
+import { StarIcon } from '@/components/ui/icons';
 import type { AfterwordQuestion, AfterwordEntry, Author, Frame } from '@/lib/types';
-import FramePicker from './FramePicker';
+import KeepsakeUpload from './KeepsakeUpload';
 
 function signatureDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-PH', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  return new Date(iso).toLocaleDateString('en-PH', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-/** Their answer. Never editable — you can't sign someone else's name. */
-function TheirAnswer({
-  entry,
-  author,
-  frames,
-}: {
-  entry: AfterwordEntry;
-  author: Author;
-  frames: Frame[];
-}) {
+/** 1–5 stars. Read-only when onPick is omitted. */
+function Stars({ value, onPick, disabled }: { value: number; onPick?: (n: number) => void; disabled?: boolean }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      {[1, 2, 3, 4, 5].map((n) => {
+        const filled = n <= value;
+        const inner = <StarIcon size={22} className={filled ? 'text-ember' : 'text-rule'} />;
+        return onPick ? (
+          <button
+            key={n}
+            type="button"
+            disabled={disabled}
+            aria-label={copy.afterword.rated(n)}
+            onClick={() => onPick(n)}
+            className="transition-transform hover:scale-110 disabled:opacity-60"
+          >
+            {inner}
+          </button>
+        ) : (
+          <span key={n}>{inner}</span>
+        );
+      })}
+    </div>
+  );
+}
+
+function TheirAnswer({ entry, author, frames }: { entry: AfterwordEntry; author: Author; frames: Frame[] }) {
   const frame = entry.answer_frame_id ? frames.find((f) => f.id === entry.answer_frame_id) : null;
+  const rating = entry.answer_text && /^[1-5]$/.test(entry.answer_text) ? Number(entry.answer_text) : null;
 
   return (
     <div className="border-l-2 border-rule pl-5">
@@ -52,12 +63,10 @@ function TheirAnswer({
       {frame?.media_url ? (
         <div className="relative mb-3 aspect-[3/2] w-full max-w-[14rem] overflow-hidden rounded-lg border border-rule">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={frame.media_url}
-            alt={frame.caption ?? 'Their Keepsake'}
-            className="h-full w-full object-cover"
-          />
+          <img src={frame.media_url} alt="" className="h-full w-full object-cover" />
         </div>
+      ) : rating !== null ? (
+        <Stars value={rating} />
       ) : (
         <p className="font-serif text-lg leading-relaxed text-ink">{entry.answer_text}</p>
       )}
@@ -91,9 +100,11 @@ export default function QuestionCard({
   frames: Frame[];
 }) {
   const [draft, setDraft] = useState(mine?.answer_text ?? '');
-  const [frameId, setFrameId] = useState<string | null>(mine?.answer_frame_id ?? null);
+  const [rating, setRating] = useState(mine?.answer_text && /^[1-5]$/.test(mine.answer_text) ? Number(mine.answer_text) : 0);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const savedText = mine?.answer_text ?? '';
 
   function save(value: string | null) {
     setError(null);
@@ -103,33 +114,29 @@ export default function QuestionCard({
     });
   }
 
-  const savedText = mine?.answer_text ?? '';
+  const keepsakeFrame =
+    question.answer_kind === 'frame' && mine?.answer_frame_id
+      ? frames.find((f) => f.id === mine.answer_frame_id) ?? null
+      : null;
 
   return (
-    <article className="border-t border-rule py-10 first:border-t-0 first:pt-0">
-      <p className="mb-3 text-[10px] uppercase tracking-[0.24em] text-ink-soft">
-        {String(index).padStart(2, '0')}
-      </p>
-
-      <h2 className="mb-6 max-w-xl font-serif text-2xl leading-snug text-ink">
-        {question.question}
-      </h2>
+    <article className="border-t border-rule py-8 first:border-t-0 first:pt-0">
+      <h3 className="mb-6 max-w-xl font-serif text-2xl leading-snug text-ink">{question.question}</h3>
 
       <div className="grid gap-8 sm:grid-cols-2">
         {/* Mine — editable */}
         <div>
-          <p className="mb-2 text-[10px] uppercase tracking-[0.2em] text-ink-soft">
-            {copy.afterword.yourAnswer}
-          </p>
+          <p className="mb-3 text-[10px] uppercase tracking-[0.2em] text-ink-soft">{copy.afterword.yourAnswer}</p>
 
           {question.answer_kind === 'frame' ? (
-            <FramePicker
-              frames={frames}
-              selectedId={frameId}
+            <KeepsakeUpload storyId={storyId} slug={slug} questionId={question.id} current={keepsakeFrame} />
+          ) : question.answer_kind === 'rating' ? (
+            <Stars
+              value={rating}
               disabled={isPending}
-              onSelect={(id) => {
-                setFrameId(id);
-                save(id);
+              onPick={(n) => {
+                setRating(n);
+                save(String(n));
               }}
             />
           ) : question.answer_kind === 'word' ? (
@@ -143,9 +150,7 @@ export default function QuestionCard({
                 onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
                 className="w-full max-w-[12rem] border-b border-rule bg-transparent pb-1 font-serif text-3xl italic text-ink outline-none transition-colors focus:border-violet-2 placeholder:text-ink-soft/40 disabled:opacity-60"
               />
-              <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-ember">
-                {copy.afterword.themeNote}
-              </p>
+              <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-ember">{copy.afterword.themeNote}</p>
             </>
           ) : (
             <textarea
@@ -160,15 +165,13 @@ export default function QuestionCard({
           )}
 
           {/* The signature IS the confirmation. No toast. */}
-          {mine && !isPending && (
+          {mine && !isPending && question.answer_kind !== 'frame' && (
             <p className="mt-2 text-xs italic text-ink-soft">
               {copy.afterword.signedBy(me.name, signatureDate(mine.created_at))}
             </p>
           )}
           {isPending && (
-            <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-ink-soft">
-              {copy.afterword.saving}
-            </p>
+            <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-ink-soft">{copy.afterword.saving}</p>
           )}
           {error && (
             <p role="alert" className="mt-2 text-xs text-ember">
@@ -177,7 +180,7 @@ export default function QuestionCard({
           )}
         </div>
 
-        {/* Theirs — read-only, or a quiet absence */}
+        {/* Theirs — read-only */}
         <div>
           {theirs && theirAuthor ? (
             <TheirAnswer entry={theirs} author={theirAuthor} frames={frames} />

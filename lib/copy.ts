@@ -52,6 +52,43 @@ export const copy = {
     footer: 'Developed by Denard, with love.',
   },
 
+  // The Story Frontispiece — the editorial opening spread on The Library.
+  frontispiece: {
+    eyebrow: 'The two of us',
+    statement: 'Every Ever After is written one frame at a time.',
+    authorRole: 'Author',
+    stats: {
+      since: 'Since',
+      chapters: 'Chapters',
+      frames: 'Frames',
+      keepsakes: 'Keepsakes',
+    },
+    edit: 'Edit',
+    editProfile: 'Edit',
+    nameLabel: 'Name',
+    namePlaceholder: 'Your name',
+    nicknameLabel: 'Nickname',
+    nicknamePlaceholder: 'Optional',
+    changePhoto: 'Change photo',
+    settingsTitle: 'Story settings',
+    titleLabel: 'Title',
+    titlePlaceholder: 'Denard & Airhyl',
+    statementLabel: 'Editorial statement',
+    statementPlaceholder: 'Every Ever After is written one frame at a time.',
+    sinceLabel: 'Since',
+    dedicationLabel: 'Dedication',
+    dedicationPlaceholder: 'For the version of us that said yes.',
+    heroLabel: 'Hero image',
+    addHero: 'Add a hero image',
+    changeHero: 'Change hero image',
+    removeHero: 'Remove hero image',
+    focusHint: 'Click the image to set its focal point.',
+    save: 'Keep',
+    cancel: 'Not yet',
+    saving: 'Keeping…',
+    saveError: "That didn't save. Try again?",
+  },
+
   // The couple hero — the highlight of The Library. Editable, then it rests
   // back into a view. This is the "who we are" of the whole book.
   couple: {
@@ -139,6 +176,17 @@ export const copy = {
   storyboard: {
     eyebrow: 'The Outline',
     title: 'The Storyboard',
+    // 1.2 — the Outline is now a section on the album, with a hero + invitation.
+    sectionTitle: 'The plan we made.',
+    tagline: 'The shape of the day — the Moments, in order.',
+    heroTitle: 'The Outline',
+    editOutline: 'Edit the outline',
+    doneOutline: 'Done editing',
+    invite: 'Share the invitation',
+    invitationEyebrow: 'An invitation',
+    invitationTitle: 'Come with me.',
+    invitationLead: 'Here is the day I have in mind for us.',
+    emptyInvite: 'Outline your Storyboard',
     lead: 'Sketch the day before it happens. Or don\'t — a story works either way.',
     empty: "Nothing's been sketched yet. Start wherever you like.",
     addBeat: 'Add a Moment',
@@ -220,6 +268,10 @@ export const copy = {
     removeKeepsake: 'Remove as The Keepsake',
     keepsake: 'The Keepsake',
     keepsakeSet: 'Marked as The Keepsake.',
+    // 1.2 — per-author Keepsakes (each of you keeps your own defining Frame)
+    keepsakeOf: (name: string) => `${name}’s Keepsake`,
+    markMyKeepsake: 'Make this my Keepsake',
+    removeMyKeepsake: 'Remove my Keepsake',
     // Deletion — the exact copy from masterfile §7. Do not soften.
     removeFromStory: "Remove from this story? It'll stay exactly where it lives.",
     deleteForever:
@@ -257,8 +309,23 @@ export const copy = {
   afterword: {
     eyebrow: 'The Afterword',
     title: 'The Afterword',
+    sectionTitle: 'Written after.',
+    tagline: 'Two authors, looking back. Answer what you want to; leave the rest.',
     lead: 'Written after, looking back. Answer what you want to. Leave the rest.',
     empty: 'Every story leaves something behind. Write yours.',
+    // 1.2 — ratings
+    ratePrompt: 'Tap to rate',
+    rated: (n: number) => `${n} of 5`,
+    // 1.2 — the Keepsake is its own upload now, not a picker
+    uploadKeepsake: 'Upload The Keepsake',
+    changeKeepsake: 'Choose a different one',
+    keepsakeUploading: 'Keeping…',
+    keepsakeCaption: 'This becomes The Keepsake — the defining image of the chapter.',
+    // 1.2 — album interleave + word pair
+    reflectionEyebrow: 'A reflection',
+    wordPairEyebrow: 'In a word',
+    carouselEyebrow: 'From the story',
+    earlier: 'Earlier reflections',
     // Per-question
     yourAnswer: 'Your answer',
     theirAnswer: (name: string) => `${name}\u2019s answer`,
@@ -304,6 +371,7 @@ export const copy = {
     beatNeedsName: 'A Moment needs a name.',
     unknownBeatType: 'That kind of Moment does not exist.',
     waitingFrameNeedsPrompt: 'A Waiting Frame needs a prompt.',
+    nameNeeded: 'A name is needed.',
     missingStory: 'Missing story.',
     noPhotograph: 'No photograph was attached.',
     notSignedIn: 'Not signed in.',
@@ -328,25 +396,43 @@ export const copy = {
   },
 } as const;
 
-// The eight questions every new story is seeded with (masterfile §5.6).
-// Q1 answers with a Frame — that sets The Keepsake.
-// Q8 answers with one word — that becomes the story's Theme.
-// Order here IS sort_order. Editing this list only affects FUTURE stories.
+// The four sections of the 1.2 Afterword, in order, with their headings.
+export const AFTERWORD_SECTIONS = [
+  { key: 'keepsake', title: 'The Keepsake', blurb: 'The one Frame that best represents the story.' },
+  { key: 'back', title: 'Looking Back', blurb: 'What happened — the events themselves.' },
+  { key: 'within', title: 'Looking Within', blurb: 'Not the places. The people.' },
+  { key: 'ahead', title: 'Looking Ahead', blurb: 'Something left for our future selves.' },
+] as const;
+
+// The 1.2 question bank every new story is seeded with. Section groups them;
+// order here IS sort_order. Everything is optional to answer.
+//   'frame'  (Keepsake) — an uploaded photograph becomes The Keepsake.
+//   'word'   — one word becomes the story's Theme (if unset).
+//   'rating' — a light 1–5 answer alongside the free-text ones.
+// Editing this list only affects FUTURE stories (existing ones are backfilled
+// idempotently — see ensureAfterwordBank).
 export const DEFAULT_AFTERWORD_QUESTIONS: {
+  section: 'keepsake' | 'back' | 'within' | 'ahead';
   question: string;
-  answer_kind: 'text' | 'frame' | 'word';
+  answer_kind: 'text' | 'frame' | 'word' | 'rating';
 }[] = [
-  { question: "What's the one Frame that brings the whole day back?", answer_kind: 'frame' },
-  { question: 'What surprised you?', answer_kind: 'text' },
-  { question: 'What was the funniest thing that happened?', answer_kind: 'text' },
-  { question: 'What did we almost not do?', answer_kind: 'text' },
-  { question: 'What would you do again, exactly the same?', answer_kind: 'text' },
-  { question: "What's something small you noticed that I probably didn't?", answer_kind: 'text' },
-  {
-    question: 'Years from now, what will you have forgotten — that this should remind you of?',
-    answer_kind: 'text',
-  },
-  { question: 'What did this chapter feel like, in one word?', answer_kind: 'word' },
+  { section: 'keepsake', question: 'Which Frame tells this chapter best?', answer_kind: 'frame' },
+
+  { section: 'back', question: 'What surprised you the most?', answer_kind: 'text' },
+  { section: 'back', question: 'What made you laugh the hardest?', answer_kind: 'text' },
+  { section: 'back', question: "What almost didn't happen?", answer_kind: 'text' },
+  { section: 'back', question: 'What small moment became unexpectedly meaningful?', answer_kind: 'text' },
+  { section: 'back', question: 'All told, how did this chapter feel?', answer_kind: 'rating' },
+
+  { section: 'within', question: 'When did you feel closest to me?', answer_kind: 'text' },
+  { section: 'within', question: 'What made this chapter feel like us?', answer_kind: 'text' },
+  { section: 'within', question: "What's one thing you're grateful for from this chapter?", answer_kind: 'text' },
+  { section: 'within', question: 'What is a moment no camera could have captured?', answer_kind: 'text' },
+
+  { section: 'ahead', question: 'What should our future selves remember from today?', answer_kind: 'text' },
+  { section: 'ahead', question: 'Years from now, what do you hope this chapter reminds you of?', answer_kind: 'text' },
+  { section: 'ahead', question: "What's one tradition from this chapter you'd love to repeat?", answer_kind: 'text' },
+  { section: 'ahead', question: 'What did this chapter feel like, in one word?', answer_kind: 'word' },
 ];
 
 export type Copy = typeof copy;

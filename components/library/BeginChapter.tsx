@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { createStory } from '@/app/actions/stories';
 import { copy } from '@/lib/copy';
 
-export default function BeginChapter() {
+export default function BeginChapter({ openUp = false }: { openUp?: boolean }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +70,11 @@ export default function BeginChapter() {
             onClick={() => setOpen(false)}
             className="fixed inset-0 z-40 cursor-default"
           />
-          <div className="absolute right-0 z-50 mt-3 w-72 rounded-2xl border border-rule bg-paper2 p-5 shadow-glow">
+          <div
+            className={`absolute z-50 w-72 rounded-2xl border border-rule bg-paper2 p-5 shadow-glow ${
+              openUp ? 'bottom-full left-1/2 mb-3 -translate-x-1/2' : 'right-0 mt-3'
+            }`}
+          >
             <label htmlFor="story-title" className="mb-2 block text-center font-serif text-lg italic text-ink">
               {copy.library.beginPrompt}
             </label>

@@ -15,7 +15,85 @@ import 'server-only';
 
 import { auth } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-import type { Story, Chapter, Frame, Author, AfterwordQuestion, AfterwordEntry, Couple } from '@/lib/types';
+import { DEFAULT_AFTERWORD_QUESTIONS } from '@/lib/copy';
+import type { Story, Chapter, Frame, Author, AfterwordQuestion, AfterwordEntry, Couple, StoryStats } from '@/lib/types';
+
+/**
+ * 1.2: make sure a story has the four-section question bank. New stories are
+ * seeded at creation; this idempotently backfills stories created before the
+ * rebuild, WITHOUT touching their old questions or answers. Safe to call on
+ * every Afterword/album render — it writes at most once per story.
+ */
+export async function ensureAfterwordBank(storyId: string): Promise<void> {
+  const db = supabaseAdmin();
+
+  const { data: existing } = await db
+    .from('afterword_questions')
+    .select('id, sort_order')
+    .eq('story_id', storyId)
+    .not('section', 'is', null)
+    .limit(1);
+
+  if (existing && existing.length > 0) return; // already has the sectioned bank
+
+  // Append after whatever sort_order the old questions used.
+  const { data: last } = await db
+    .from('afterword_questions')
+    .select('sort_order')
+    .eq('story_id', storyId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const base = ((last?.sort_order as number | undefined) ?? 0) + 1;
+
+  const { error } = await db.from('afterword_questions').insert(
+    DEFAULT_AFTERWORD_QUESTIONS.map((q, i) => ({
+      story_id: storyId,
+      question: q.question,
+      section: q.section,
+      answer_kind: q.answer_kind,
+      sort_order: base + i,
+    }))
+  );
+  if (error) console.error('[queries] ensureAfterwordBank:', error.message);
+}
+
+/**
+ * Live story statistics for the frontispiece — aggregates across every story.
+ * `Since` prefers the couple's own date, else the earliest story's year.
+ * `Keepsakes` counts stories that have a defining Frame set.
+ */
+export async function getStoryStats(sinceOverride: string | null): Promise<StoryStats> {
+  const db = supabaseAdmin();
+
+  const [chapters, frames, keepsakes] = await Promise.all([
+    db.from('chapters').select('id', { count: 'exact', head: true }),
+    db.from('frames').select('id', { count: 'exact', head: true }).eq('status', 'developed'),
+    db.from('stories').select('id', { count: 'exact', head: true }).not('keepsake_frame_id', 'is', null),
+  ]);
+
+  let sinceYear: number | null = null;
+  if (sinceOverride) {
+    sinceYear = new Date(sinceOverride).getFullYear();
+  } else {
+    const { data } = await db
+      .from('stories')
+      .select('starts_on, created_at')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const earliest = (data?.starts_on as string | null) ?? (data?.created_at as string | null);
+    if (earliest) sinceYear = new Date(earliest).getFullYear();
+  }
+
+  return {
+    sinceYear,
+    chapters: chapters.count ?? 0,
+    frames: frames.count ?? 0,
+    keepsakes: keepsakes.count ?? 0,
+  };
+}
 
 /** The couple hero (1.2). One row, id = 1. Null until they introduce themselves. */
 export async function getCouple(): Promise<Couple | null> {
@@ -110,12 +188,16 @@ export async function getChapters(storyId: string): Promise<Chapter[]> {
 export async function getFramesForStory(storyId: string): Promise<Frame[]> {
   const chapters = await getChapters(storyId);
   const ids = chapters.map((c) => c.id);
-  if (ids.length === 0) return [];
+
+  // 1.2: also include story-level Frames (the Keepsake upload) that belong to
+  // the story directly via story_id, with no Moment.
+  const orParts = [`story_id.eq.${storyId}`];
+  if (ids.length > 0) orParts.push(`chapter_id.in.(${ids.join(',')})`);
 
   const { data, error } = await supabaseAdmin()
     .from('frames')
     .select('*')
-    .in('chapter_id', ids)
+    .or(orParts.join(','))
     .order('sort_order', { ascending: true });
 
   if (error) {

@@ -10,7 +10,8 @@
 export type BeatType = 'travel' | 'arrival' | 'activity' | 'meal' | 'rest' | 'other';
 export type FrameStatus = 'waiting' | 'developed';
 export type MediaType = 'image' | 'video';
-export type AnswerKind = 'text' | 'frame' | 'word';
+export type AnswerKind = 'text' | 'frame' | 'word' | 'rating';
+export type AfterwordSection = 'keepsake' | 'back' | 'within' | 'ahead';
 
 export interface Author {
   id: string;
@@ -24,15 +25,27 @@ export interface Author {
 // The editable couple hero on The Library (1.2). One row, id is always 1.
 export interface Couple {
   id: number;
-  headline: string | null;
-  story: string | null;
-  member_one_name: string | null;
+  headline: string | null;         // the relationship title
+  story: string | null;            // the editorial statement
+  hero_image_url: string | null;   // 1.2: frontispiece hero photograph
+  hero_focus_x: number | null;     // focal point (percent)
+  hero_focus_y: number | null;
+  since: string | null;            // "Since 2024" (date)
+  dedication: string | null;
+  member_one_name: string | null;  // legacy; authors table supplies names/avatars
   member_one_note: string | null;
   member_one_photo_url: string | null;
   member_two_name: string | null;
   member_two_note: string | null;
   member_two_photo_url: string | null;
   updated_at: string;
+}
+
+export interface StoryStats {
+  sinceYear: number | null;
+  chapters: number;
+  frames: number;
+  keepsakes: number;
 }
 
 // A "Fleeting Frames" — one story. The Prologue lives here as columns.
@@ -72,6 +85,7 @@ export interface Chapter {
 export interface Frame {
   id: string;
   chapter_id: string | null;
+  story_id: string | null;     // 1.2: set for story-level Frames (the Keepsake upload) with no Moment
   media_url: string | null;    // null while waiting
   media_type: MediaType;       // photos and (as of 1.2) videos
   storage_path: string | null; // "frames/<uuid>.jpg" — needed to delete later
@@ -92,7 +106,8 @@ export interface AfterwordQuestion {
   id: string;
   story_id: string;
   question: string;
-  answer_kind: AnswerKind; // 'frame' for Q1 (sets Keepsake), 'word' for Q8 (sets Theme)
+  section: AfterwordSection | null; // 1.2: which of the four parts this belongs to
+  answer_kind: AnswerKind; // 'frame' (Keepsake upload), 'word' (Theme), 'rating', or 'text'
   sort_order: number;
 }
 

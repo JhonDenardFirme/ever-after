@@ -25,6 +25,15 @@ export function TrashIcon({ size = 14, className = '' }: { size?: number; classN
   );
 }
 
+/** A four-point star — the recurring Ever After sparkle (dividers, motifs). */
+export function SparkIcon({ size = 16, className = '' }: { size?: number; className?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M12 1.5c.5 4.6 2.4 6.5 7 7-4.6.5-6.5 2.4-7 7-.5-4.6-2.4-6.5-7-7 4.6-.5 6.5-2.4 7-7z" />
+    </svg>
+  );
+}
+
 /** The Keepsake badge — a shining star in an ember disc with a soft glow. */
 export function StarBadge({ label }: { label?: string }) {
   return (

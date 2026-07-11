@@ -13,10 +13,19 @@
 // -----------------------------------------------------------------------------
 
 import { useState, useEffect, useTransition } from 'react';
-import { setKeepsake, removeKeepsake, deleteFrame, updateCaption } from '@/app/actions/frames';
+import { deleteFrame, updateCaption } from '@/app/actions/frames';
+import { setMyKeepsake, removeMyKeepsake } from '@/app/actions/afterword';
 import { copy } from '@/lib/copy';
 import { StarIcon, TrashIcon } from '@/components/ui/icons';
 import type { Frame, Author } from '@/lib/types';
+
+/** "Denard's Keepsake" / "Denard's & Airhyl's Keepsake". */
+function keepsakeLabel(names: string[]): string {
+  const valid = names.filter(Boolean);
+  if (valid.length === 0) return copy.frames.keepsake;
+  if (valid.length === 1) return copy.frames.keepsakeOf(valid[0]);
+  return `${valid.map((n) => `${n}’s`).join(' & ')} ${copy.frames.keepsake}`;
+}
 
 function longDate(iso: string | null): string | null {
   if (!iso) return null;
@@ -26,19 +35,23 @@ function longDate(iso: string | null): string | null {
 export default function PhotoLightbox({
   frame,
   authors,
-  isKeepsake,
+  keepsakeNames,
+  mine,
   storyId,
   slug,
   onClose,
 }: {
   frame: Frame;
   authors: Record<string, Author>;
-  isKeepsake: boolean;
+  /** The author name(s) whose Keepsake this Frame is. */
+  keepsakeNames: string[];
+  /** Whether it is the signed-in author's own Keepsake. */
+  mine: boolean;
   storyId: string;
   slug: string;
   onClose: () => void;
 }) {
-  const [keepsake, setKeep] = useState(isKeepsake);
+  const [isMine, setIsMine] = useState(mine);
   const [caption, setCaption] = useState(frame.caption ?? '');
   const [savedCaption, setSavedCaption] = useState(frame.caption ?? '');
   const [editingCaption, setEditingCaption] = useState(false);
@@ -77,10 +90,10 @@ export default function PhotoLightbox({
   function toggleKeepsake() {
     setError(null);
     startTransition(async () => {
-      const result = keepsake
-        ? await removeKeepsake(storyId, slug)
-        : await setKeepsake(storyId, slug, frame.id);
-      if (result.ok) setKeep((k) => !k);
+      const result = isMine
+        ? await removeMyKeepsake(storyId, slug)
+        : await setMyKeepsake(storyId, slug, frame.id);
+      if (result.ok) setIsMine((m) => !m);
       else setError(result.error);
     });
   }
@@ -124,10 +137,10 @@ export default function PhotoLightbox({
           {/* a whisper of violet at the base, not a wash */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-violet-bleed opacity-50" />
 
-          {keepsake && (
+          {keepsakeNames.length > 0 && (
             <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-ember px-2.5 py-1 text-[9px] uppercase tracking-[0.16em] text-paper shadow-[0_0_14px_rgba(249,115,22,0.6)]">
               <StarIcon size={11} />
-              {copy.frames.keepsake}
+              {keepsakeLabel(keepsakeNames)}
             </span>
           )}
         </div>
@@ -254,13 +267,13 @@ export default function PhotoLightbox({
                   onClick={toggleKeepsake}
                   disabled={isPending}
                   className={`${actionBtn} ${
-                    keepsake
+                    isMine
                       ? 'border-ember/50 bg-ember/10 text-ember hover:bg-ember/15'
                       : 'border-rule text-ink-soft hover:border-violet-2 hover:text-violet'
                   }`}
                 >
                   <StarIcon size={13} />
-                  {keepsake ? copy.frames.removeKeepsake : copy.frames.markKeepsake}
+                  {isMine ? copy.frames.removeMyKeepsake : copy.frames.markMyKeepsake}
                 </button>
                 <button
                   type="button"

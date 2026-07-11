@@ -17,7 +17,7 @@ export default function SectionHeading({
   align = 'left',
   action,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   tagline?: string;
   align?: 'left' | 'center';
@@ -29,12 +29,14 @@ export default function SectionHeading({
   return (
     <div className={`mb-8 flex flex-wrap items-end gap-4 ${centered ? 'justify-center text-center' : 'justify-between'}`}>
       <div className={centered ? 'mx-auto' : ''}>
-        {/* eyebrow with hairline detail */}
-        <div className={`mb-3 flex items-center gap-3 ${centered ? 'justify-center' : ''}`}>
-          <span className="h-px w-8 bg-ember/60" />
-          <p className="text-[10px] uppercase tracking-[0.3em] text-ember">{eyebrow}</p>
-          {centered && <span className="h-px w-8 bg-ember/60" />}
-        </div>
+        {/* eyebrow with hairline detail (optional) */}
+        {eyebrow && (
+          <div className={`mb-3 flex items-center gap-3 ${centered ? 'justify-center' : ''}`}>
+            <span className="h-px w-8 bg-ember/60" />
+            <p className="text-[10px] uppercase tracking-[0.3em] text-ember">{eyebrow}</p>
+            {centered && <span className="h-px w-8 bg-ember/60" />}
+          </div>
+        )}
 
         <h2 className="bg-ever-gradient bg-clip-text font-serif text-4xl leading-tight text-transparent sm:text-5xl">
           {title}

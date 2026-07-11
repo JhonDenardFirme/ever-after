@@ -42,6 +42,46 @@ body::before {
 }
 
 /* ---------------------------------------------------------------------------
+   The Story Frontispiece (1.2). A slow "Ken Burns" drift on the hero photo so
+   the opening spread feels alive, and a soft pulse on the divider star. Both
+   go still under reduced motion.
+--------------------------------------------------------------------------- */
+@keyframes ever-kenburns {
+  0%   { transform: scale(1.06) translate(0, 0); }
+  100% { transform: scale(1.16) translate(-1.5%, -1.5%); }
+}
+.ever-kenburns { animation: ever-kenburns 32s ease-in-out infinite alternate; will-change: transform; }
+
+@keyframes ever-star-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); filter: drop-shadow(0 0 3px rgba(249, 115, 22, 0.5)); }
+  50%      { opacity: 1;    transform: scale(1.15); filter: drop-shadow(0 0 9px rgba(249, 115, 22, 0.85)); }
+}
+.ever-star-pulse { animation: ever-star-pulse 3.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ever-kenburns { animation: none; }
+  .ever-star-pulse { animation: none; opacity: 0.85; }
+}
+
+/* ---------------------------------------------------------------------------
+   The Outline marquee (1.2). The view-mode Moment timeline auto-scrolls
+   forever; content is duplicated so translateX(-50%) loops seamlessly. Pauses
+   on hover, and under reduced motion it becomes a normal horizontal scroller
+   instead of moving on its own.
+--------------------------------------------------------------------------- */
+@keyframes ever-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ever-marquee-wrap { overflow: hidden; }
+.ever-marquee { animation: ever-marquee 48s linear infinite; }
+.ever-marquee-wrap:hover .ever-marquee { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .ever-marquee-wrap { overflow-x: auto; }
+  .ever-marquee { animation: none; }
+}
+
+/* ---------------------------------------------------------------------------
    PRINT — "Develop this Fleeting Frames"
    Cmd/Ctrl+P on /story/[slug]/print, then Save as PDF. No PDF library, no
    headless Chrome. A careful stylesheet gets 90% of a photo book for free.
