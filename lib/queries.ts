@@ -13,8 +13,9 @@ import 'server-only';
 // error boundary yet; failing soft is the right default for now.
 // -----------------------------------------------------------------------------
 
+import { auth } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-import type { Story } from '@/lib/types';
+import type { Story, Chapter, Frame, Author, AfterwordQuestion, AfterwordEntry } from '@/lib/types';
 
 /** Every story, newest first. Powers The Library. */
 export async function getStories(): Promise<Story[]> {
@@ -64,4 +65,107 @@ export async function getCoverUrl(story: Story): Promise<string | null> {
     return null;
   }
   return (data?.media_url as string | undefined) ?? null;
+}
+
+/** Every beat in a story. Ordering is applied client-side via lib/beats.ts
+ *  so the rule lives in exactly one place. */
+export async function getChapters(storyId: string): Promise<Chapter[]> {
+  const { data, error } = await supabaseAdmin()
+    .from('chapters')
+    .select('*')
+    .eq('story_id', storyId)
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    console.error('[queries] getChapters:', error.message);
+    return [];
+  }
+  return (data ?? []) as Chapter[];
+}
+
+/**
+ * Every Frame belonging to any beat in this story, waiting or developed.
+ *
+ * Note: a Frame with a null chapter_id is deliberately NOT returned here —
+ * it belongs to no beat, so no beat's Frame List should show it. Phase 4 adds
+ * a separate "loose Frames" query for the Frame Wall, which does want them.
+ */
+export async function getFramesForStory(storyId: string): Promise<Frame[]> {
+  const chapters = await getChapters(storyId);
+  const ids = chapters.map((c) => c.id);
+  if (ids.length === 0) return [];
+
+  const { data, error } = await supabaseAdmin()
+    .from('frames')
+    .select('*')
+    .in('chapter_id', ids)
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    console.error('[queries] getFramesForStory:', error.message);
+    return [];
+  }
+  return (data ?? []) as Frame[];
+}
+
+/** Both of us, keyed by id — so a Waiting Frame can say who left it. */
+export async function getAuthorsById(): Promise<Record<string, Author>> {
+  const { data, error } = await supabaseAdmin().from('authors').select('*');
+  if (error) {
+    console.error('[queries] getAuthorsById:', error.message);
+    return {};
+  }
+  return Object.fromEntries(((data ?? []) as Author[]).map((a) => [a.id, a]));
+}
+
+/** The eight questions, in the order they were seeded. */
+export async function getAfterwordQuestions(storyId: string): Promise<AfterwordQuestion[]> {
+  const { data, error } = await supabaseAdmin()
+    .from('afterword_questions')
+    .select('*')
+    .eq('story_id', storyId)
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    console.error('[queries] getAfterwordQuestions:', error.message);
+    return [];
+  }
+  return (data ?? []) as AfterwordQuestion[];
+}
+
+/**
+ * Every answer either of us has written for this story. Grouped by question
+ * in the component, because a question with two answers renders them side by
+ * side — that's the whole point of the unique(question_id, author_id) pair.
+ */
+export async function getAfterwordEntries(storyId: string): Promise<AfterwordEntry[]> {
+  const questions = await getAfterwordQuestions(storyId);
+  const ids = questions.map((q) => q.id);
+  if (ids.length === 0) return [];
+
+  const { data, error } = await supabaseAdmin()
+    .from('afterword_entries')
+    .select('*')
+    .in('question_id', ids);
+
+  if (error) {
+    console.error('[queries] getAfterwordEntries:', error.message);
+    return [];
+  }
+  return (data ?? []) as AfterwordEntry[];
+}
+
+/** The signed-in author, matched by email. Null if the session is gone. */
+export async function getCurrentAuthor(): Promise<Author | null> {
+  const session = await auth();
+  const email = session?.user?.email?.toLowerCase();
+  if (!email) return null;
+
+  const { data } = await supabaseAdmin()
+    .from('authors')
+    .select('*')
+    .eq('email', email)
+    .maybeSingle();
+
+  return (data as Author) ?? null;
 }

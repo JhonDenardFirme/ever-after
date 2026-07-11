@@ -58,7 +58,9 @@ create table if not exists frames (
   id            uuid primary key default gen_random_uuid(),
   chapter_id    uuid references chapters(id) on delete set null,
   media_url     text,                           -- null while waiting
-  storage_path  text,                           -- "frames/<uuid>.jpg" — needed to delete
+  media_type    text not null default 'image'
+                check (media_type in ('image','video')),
+  storage_path  text,                           -- "<uuid>.jpg" — path WITHIN the bucket, needed to delete
   caption       text,
   setting       text,
   status        text not null default 'developed'

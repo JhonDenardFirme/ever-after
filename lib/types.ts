@@ -9,6 +9,7 @@
 
 export type BeatType = 'travel' | 'arrival' | 'activity' | 'meal' | 'rest' | 'other';
 export type FrameStatus = 'waiting' | 'developed';
+export type MediaType = 'image' | 'video';
 export type AnswerKind = 'text' | 'frame' | 'word';
 
 export interface Author {
@@ -56,6 +57,7 @@ export interface Frame {
   id: string;
   chapter_id: string | null;
   media_url: string | null;    // null while waiting
+  media_type: MediaType;       // photos and (as of 1.2) videos
   storage_path: string | null; // "frames/<uuid>.jpg" — needed to delete later
   caption: string | null;
   setting: string | null;

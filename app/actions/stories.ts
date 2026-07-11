@@ -2,51 +2,19 @@
 // -----------------------------------------------------------------------------
 // app/actions/stories.ts
 //
-// Every write to the `stories` table goes through here. Two things worth
-// remembering about Server Actions:
+// Every write to the `stories` table. The auth guard now lives in lib/guard.ts
+// (Phase 3 pulled it out so chapters.ts and frames.ts could share it).
 //
-//  1. They are PUBLIC HTTP ENDPOINTS. Middleware protects routes, not actions.
-//     Anyone who knows the action ID can POST to it. So every action
-//     re-checks the session itself. `requireAuthor()` below is not paranoia,
-//     it's the actual security boundary.
-//
-//  2. After a write, revalidatePath() tells Next.js "this route's data is
-//     stale, re-render it." Forget it and the DB updates while the screen
-//     doesn't, which is a genuinely maddening twenty minutes of debugging.
+// Reminder to self: after a write, revalidatePath() tells Next "this route's
+// data is stale." Forget it and the DB updates while the screen doesn't.
 // -----------------------------------------------------------------------------
 
 import { revalidatePath } from 'next/cache';
-import { auth } from '@/lib/auth';
+import { requireAuthor, attempt, type Result } from '@/lib/guard';
 import { supabaseAdmin } from '@/lib/supabase';
 import { slugify } from '@/lib/slug';
-import { DEFAULT_AFTERWORD_QUESTIONS } from '@/lib/copy';
+import { copy, DEFAULT_AFTERWORD_QUESTIONS } from '@/lib/copy';
 import type { Story } from '@/lib/types';
-
-type Result<T = void> = { ok: true; data: T } | { ok: false; error: string };
-
-/**
- * Confirms there's a signed-in session AND that the email maps to a row in
- * `authors`. Returns the author id so writes can be attributed later
- * (Phase 3's Waiting Frames need this; Phase 2 only needs the guard).
- */
-async function requireAuthor(): Promise<{ id: string; email: string }> {
-  const session = await auth();
-  const email = session?.user?.email?.toLowerCase();
-  if (!email) throw new Error('Not signed in.');
-
-  const { data, error } = await supabaseAdmin()
-    .from('authors')
-    .select('id, email')
-    .eq('email', email)
-    .maybeSingle();
-
-  if (error || !data) {
-    // Signed in with Google + on the allowlist, but no row in `authors`.
-    // Means the seed emails in schema.sql don't match the real Gmail address.
-    throw new Error(`No author row for ${email} — check the seed in schema.sql.`);
-  }
-  return data as { id: string; email: string };
-}
 
 /**
  * Finds a slug nobody's using. "tagaytay-ii" -> "tagaytay-ii-2" -> "-3"...
@@ -62,25 +30,22 @@ async function uniqueSlug(title: string): Promise<string> {
     const { data } = await db.from('stories').select('id').eq('slug', candidate).maybeSingle();
     if (!data) return candidate;
   }
-  // Fifty stories with the same name is not a real scenario, but never loop
-  // forever on a hunch.
   return `${base}-${Date.now()}`;
 }
 
 /**
  * Begin a new chapter. Creates the story, then seeds its eight Afterword
- * questions so /afterword works from day one without a "generate questions"
- * step the reader would have to think about.
+ * questions so /afterword works from day one.
  *
- * The question seed is per-story on purpose: editing the defaults in copy.ts
- * later must not silently rewrite the questions of stories already written.
+ * The seed is per-story on purpose: editing the defaults in copy.ts later must
+ * not silently rewrite the questions of stories already written.
  */
 export async function createStory(title: string): Promise<Result<{ slug: string }>> {
-  try {
+  return attempt(async () => {
     await requireAuthor();
 
     const clean = title.trim();
-    if (!clean) return { ok: false, error: 'A story needs a name.' };
+    if (!clean) return { ok: false, error: copy.validation.storyNeedsName };
 
     const db = supabaseAdmin();
     const slug = await uniqueSlug(clean);
@@ -92,8 +57,7 @@ export async function createStory(title: string): Promise<Result<{ slug: string 
       .single();
 
     if (storyError || !story) {
-      console.error('[createStory] insert:', storyError?.message);
-      return { ok: false, error: storyError?.message ?? 'Could not create the story.' };
+      return { ok: false, error: storyError?.message ?? copy.validation.couldNotCreateStory };
     }
 
     const { error: qError } = await db.from('afterword_questions').insert(
@@ -111,11 +75,7 @@ export async function createStory(title: string): Promise<Result<{ slug: string 
 
     revalidatePath('/library');
     return { ok: true, data: { slug: story.slug as string } };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Something went wrong.';
-    console.error('[createStory]', message);
-    return { ok: false, error: message };
-  }
+  });
 }
 
 // Only these columns may be written from the client. Anything else in the
@@ -136,20 +96,17 @@ export type EditableField = (typeof EDITABLE)[number];
 
 /**
  * Saves a single Prologue field. One field per call — inline editing saves on
- * blur, so batching would only add a "dirty state" problem I don't want.
+ * blur, so batching would only add a dirty-state problem I don't want.
  *
- * Empty string is normalized to null, so an emptied field reads as absent
- * rather than as an empty string (matters for `field ?? placeholder` checks).
- *
- * Note: changing the title does NOT re-slug the story. Slugs are permanent
- * once created — a shared link should never rot because someone fixed a typo.
+ * Changing the title does NOT re-slug. Slugs are permanent once created — a
+ * shared link should never rot because someone fixed a typo.
  */
 export async function updateStory(
   storyId: string,
   field: EditableField,
   value: string
 ): Promise<Result<Story>> {
-  try {
+  return attempt(async () => {
     await requireAuthor();
 
     if (!EDITABLE.includes(field)) {
@@ -157,13 +114,12 @@ export async function updateStory(
     }
 
     const trimmed = value.trim();
-
-    // Dates come from <input type="date"> as "" or "YYYY-MM-DD". Postgres
-    // rejects "" for a date column, so null it out explicitly.
+    // <input type="date"> emits "" when cleared; Postgres rejects that for a
+    // date column. Normalize empty -> null across the board.
     const next = trimmed === '' ? null : trimmed;
 
     if (field === 'title' && next === null) {
-      return { ok: false, error: 'A story needs a name.' };
+      return { ok: false, error: copy.validation.storyNeedsName };
     }
 
     const { data, error } = await supabaseAdmin()
@@ -173,18 +129,11 @@ export async function updateStory(
       .select('*')
       .single();
 
-    if (error || !data) {
-      console.error('[updateStory]', error?.message);
-      return { ok: false, error: error?.message ?? 'Could not save.' };
-    }
+    if (error || !data) return { ok: false, error: error?.message ?? copy.validation.couldNotSave };
 
     const story = data as Story;
     revalidatePath(`/story/${story.slug}`);
     revalidatePath('/library');
     return { ok: true, data: story };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Something went wrong.';
-    console.error('[updateStory]', message);
-    return { ok: false, error: message };
-  }
+  });
 }

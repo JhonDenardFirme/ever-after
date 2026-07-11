@@ -47,6 +47,40 @@ export default async function ProloguePage({ params }: { params: { slug: string 
       </p>
 
       <PrologueBody story={story} />
+
+      {/* The two ways out of the Prologue: plan the day, or read it. Sits
+          where a table of contents would. */}
+      <div className="mx-auto grid max-w-2xl gap-3 px-6 pb-24 sm:grid-cols-3">
+        <Link
+          href={`/story/${story.slug}/storyboard`}
+          className="block rounded-2xl border border-rule bg-paper2 px-6 py-5 text-center transition-colors hover:border-violet-2"
+        >
+          <p className="mb-1 text-[10px] uppercase tracking-[0.24em] text-ink-soft">
+            {copy.storyboard.eyebrow}
+          </p>
+          <p className="font-serif text-xl text-ink">{copy.prologue.toStoryboard}</p>
+        </Link>
+
+        <Link
+          href={`/story/${story.slug}/frames`}
+          className="block rounded-2xl border border-rule bg-paper2 px-6 py-5 text-center transition-colors hover:border-violet-2"
+        >
+          <p className="mb-1 text-[10px] uppercase tracking-[0.24em] text-ember">
+            {copy.frames.eyebrow}
+          </p>
+          <p className="font-serif text-xl text-ink">{copy.frames.toFrames}</p>
+        </Link>
+
+        <Link
+          href={`/story/${story.slug}/afterword`}
+          className="block rounded-2xl border border-rule bg-paper2 px-6 py-5 text-center transition-colors hover:border-violet-2"
+        >
+          <p className="mb-1 text-[10px] uppercase tracking-[0.24em] text-ink-soft">
+            {copy.afterword.eyebrow}
+          </p>
+          <p className="font-serif text-xl text-ink">{copy.afterword.toAfterword}</p>
+        </Link>
+      </div>
     </main>
   );
 }

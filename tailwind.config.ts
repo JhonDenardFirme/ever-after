@@ -15,6 +15,7 @@ const config: Config = {
         paper: '#F7F3EC',        // page background — the room
         paper2: '#F1EADF',       // raised surfaces, cards
         rule: '#E2D7C6',         // hairlines, dividers
+        'rule-strong': '#D3C4B8', // dashed borders on Waiting Frames — needs more contrast
         ink: '#2A2231',          // body text — violet-tinted black, never pure #000
         'ink-soft': '#6B6156',   // secondary text
 
@@ -35,6 +36,9 @@ const config: Config = {
         // shelfLift's resting + hover shadows, named so motion + CSS agree
         shelf: '0 1px 2px rgba(42, 34, 49, 0.08)',
         'shelf-lifted': '0 14px 28px rgba(42, 34, 49, 0.14)',
+        // 1.2: dark violet surfaces glow instead of merely sitting there
+        glow: '0 0 28px rgba(81, 21, 171, 0.35)',
+        'glow-soft': '0 0 18px rgba(53, 14, 112, 0.25)',
       },
     },
   },

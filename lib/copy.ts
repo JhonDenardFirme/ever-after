@@ -83,7 +83,7 @@ export const copy = {
     title: 'The Storyboard',
     lead: 'Sketch the day before it happens. Or don\'t — a story works either way.',
     empty: "Nothing's been sketched yet. Start wherever you like.",
-    addBeat: 'Add a beat',
+    addBeat: 'Add a Moment',
     // The little inline form for a new beat
     newBeatPlaceholder: 'What happens?',
     newBeatConfirm: 'Add',
@@ -101,12 +101,12 @@ export const copy = {
       notes: 'Windows down once the air turns cool.',
       setting: 'Somewhere on the hill',
     },
-    untimed: 'Whenever it happens',
-    untimedHint: 'Untimed beats sort last. Drag them to reorder.',
-    timedHint: 'Timed beats sort by the clock. Change the time to move it.',
+    untimed: '\u2014', // 1.2: a quiet dash instead of a sentence eating space
+    untimedHint: 'Untimed Moments sort last. Drag them to reorder.',
+    timedHint: 'Timed Moments sort by the clock. Change the time to move it.',
     pastUndeveloped: 'This one came and went. Still worth a Frame, whenever you find it.',
-    deleteBeat: 'Remove this beat',
-    deleteBeatConfirm: 'This beat and everything in it will be gone for good.',
+    deleteBeat: 'Remove this Moment',
+    deleteBeatConfirm: 'This Moment and everything in it will be gone for good.',
     confirmYes: 'Yes, let it go',
     confirmNo: 'Not yet',
     reordered: 'Your day, resequenced.',
@@ -147,8 +147,10 @@ export const copy = {
     emptyChapter: 'This chapter is waiting for its first Frame.',
     looseFrames: 'Not yet placed',
     // Upload
-    develop: 'Develop a Frame',
-    developing: 'Developing\u2026',
+    develop: 'Upload pictures',
+    developing: 'Uploading\u2026',
+    uploadingCount: (i: number, n: number) => `Uploading ${i} of ${n}\u2026`,
+    videoTooLarge: 'Videos need to stay under 50MB. Trim it a little?',
     developed: 'Your Frame has found its place.',
     developError: "That Frame didn't quite land. Try again?",
     tooLarge: 'That file is too big, even compressed. Try a smaller one.',
@@ -166,6 +168,14 @@ export const copy = {
     confirmYes: 'Yes, let it go',
     confirmNo: 'Not yet',
     deleteAction: 'Delete this Frame',
+    select: 'Select',
+    selectDone: 'Done',
+    chosen: (n: number) => (n === 1 ? '1 chosen' : `${n} chosen`),
+    deleteSelected: (n: number) => (n === 1 ? 'Delete 1 Frame' : `Delete ${n} Frames`),
+    deleteManyConfirm: (n: number) =>
+      n === 1
+        ? 'This Frame will be gone for good \u2014 from everywhere. Are you sure?'
+        : `These ${n} Frames will be gone for good \u2014 not just from this story, from everywhere. Are you sure?`,
     deleteError: "That Frame couldn't be removed. Try again?",
     // Attribution
     developedBy: (name: string) => `${name} developed this`,
@@ -220,8 +230,8 @@ export const copy = {
   // not scattered through the actions.
   validation: {
     storyNeedsName: 'A story needs a name.',
-    beatNeedsName: 'A beat needs a name.',
-    unknownBeatType: 'That kind of beat does not exist.',
+    beatNeedsName: 'A Moment needs a name.',
+    unknownBeatType: 'That kind of Moment does not exist.',
     waitingFrameNeedsPrompt: 'A Waiting Frame needs a prompt.',
     missingStory: 'Missing story.',
     noPhotograph: 'No photograph was attached.',

@@ -1,0 +1,204 @@
+Okay. I want to revise the EverAfter Phase 5. lets call it EverAfter 1.1
+
+In this, it will become 1.2
+
+Upgrade Ever After Phase 5 into Ever After 1.2 by refining the user experience, visual hierarchy, interaction design, and collaborative storytelling workflow while preserving the existing architecture, business logic, and design language.
+
+INSTRUCTION:
+- I will leave my comments and observations. Requests, pproblems that arised, and other concerns. As the chief architect of Everafter, ppplease edit the whole ZIP File containing everything. Its like a regeneration of everything, except for the Phase guides and env variables.
+- Please edit accordingly. make sure the edits are surgical, accurate, and will notbreak everything. After the regeneration of the ZIP, everything must work exactly as intended. please erform checking mechanisms before finishing this task
+- If we need to edit the schema, just create a new Supabase guide that will edit the current DB
+
+
+Before editing anything:
+
+1. Read every file.
+2. Build a dependency graph.
+3. Identify affected components.
+4. Produce an implementation plan.
+5. Identify database migrations.
+6. Identify breaking changes.
+7. Only then begin modifications.
+
+-------
+
+Preserve all existing naming conventions.
+
+Preserve folder structure.
+
+Preserve TypeScript strictness.
+
+Preserve existing Supabase architecture.
+
+Preserve the copy system.
+
+Preserve authentication.
+
+Preserve design tokens.
+
+Never duplicate functionality.
+
+Never introduce temporary hacks.
+
+------------------
+
+Here are my comments so far:
+
+A. The Library
+- The Library is okay. But I wish there are additional design elements there.
+- It will be nice if it is custumized, with a profile picture of the couple. like Hi! Im ... and then the other coupple member. hi, Im ... or something cute. Basically its the highlight of the page.
+- And then when we scroll, we will have the library. it should also have a description. Like the page is divided into subsections. We have established their titles, but it will be nicer to explain the concet behind then. ex. Here contains  .... or something more cuter and romantic.
+- Begin a New Chapter should be placed on Upper Right. Beside it is the profile circleframe. With an option to upload a profile picture. but by default, it fetches the Google ACC Picture. And then its a pop up. It has redirection to sections, and then log out button. 
+- The Chapters Frame items can become more bigger, more luxurous, and more aesthetically designed. It looks sleek but its too simple. But do not Info-overload it. 
+- Lets add other design elements for this. Maybe a hero section of some sorts, and then a creative presentation of who the couple is. It can be editable, and also allows CRUD Operations. it shoould have a small edit icon, cna upload custom pictures, etc. And then save. And then it reverts back to view mode
+- We can have a nice footer so that we can have some formality. Developed by Denard, With Love. Or something like that
+
+B. Fleeting Frames (Album)
+
+- The page is okay and its very detailed. But same comment. It starts as a prompt or form. but when something is edited, it becomes View mode. It should have a small edit icon that brings back the whole form.A nd when something is edited, it is displayed back. So only the filled up items are displpayed.
+- This should look like a scrapbook. I like our current brand style, but the layout and hierarchy of everything is a little bit confusing. Everything is in their same level.
+- We can use proper subdividers or larger texts to highlight the Album's Sections. Like the rologue. I like the design that looks like a chapter, small text. but it should stand out on other texts (the labels of items are the same) So please find a way. i like the hairline dividers in this. Maybe we can also add vertical ones for the design
+- Some highlighted texts should be centered and bigger than others. I also like to incorporate the gradient of violet and orange in this so it feels more sppecial (alongside with the main title)
+- So PPrologue. And then a centered Eppigraph. I will like this if its placed on a streamer picture (add a picture with multiply settings for color). The text inside it is the Epigraph. And then the Dedication is a small subtext. So this section should have the 80% width of the frame. its not fulll width like the cover, it should jsut cover the whole width of the inside contents. Got it? If you have other design ideas, please implement it io make it better. The whole idea is avodiing multippple sections to become cluttered and text-heavy.
+- This is an album viewer. so please incorporate pictures in everything. We can have carousels, sliders, etc. 
+- I also like an instagram layout as the default. 
+- I like a soundtrack version taht can embed a spotify song, that will copy the link only. If we can jsut ask the song link, and then we can display the song with our custom theme? or if not possible, just the default embed option within the spotify.
+- I like the song to be default played. And then theres an animation beside with track, a spinning purple disk with design Or the album cover of the song. So its easthetic. it is default pplayed. And then it can be paused. Please make sure the design is captivating. Maybe a thin hairline divider, and a half spinning disk in the center (downwards). ANd then the song details (maybe just the song and artist, plus an optional description of this song)
+- I think we still also dont have upload button for uploading the cover photo. And make sure that the photo will be dislpayed beautifully, plus the  violet multiplpy asset should be a gradient.
+
+C. The Outline
+- The Outline is intended as an Invitation Planner. So if the album is blank, we will have a create the Outline or Outline your Storyboard... And then when its fiulled up, it is displayed in the Fleeting Frames page (the album) Together with everything, ANd then there will be an edit also. Just the subtle edit option.
+- The Outline should be displayed as a section and not as a separate page. 
+- I liked the form. But please use Violet accent on this.
+- Do not call it beat. but Moment. It should be the wording. Storyboard and Moments. 
+- The timeline is good and impressive, but when it goes longer, it should have a scroller to view it in edit mode. If view mode, it is an infinite autoscroller. Just when the activities becomes too many...
+- Do not put a Defautl Whenever it happens since it takes too much space. Maybe like a subtle - to take the placeholder space
+- Remove should be a button with an icon
+
+- I agree that the framelist shoudl also wihtin the outline. 
+- The concept is, we are creating Sub albums for this Chapter. So they are a collection of Waiting Frames
+- So we can just create some to do, then empty frames to indicate that they are a set. Please create a proper layout for this thats captivating, creative, and engaging. 
+- The Framelist should also become big like the Storyboard title.
+- The Outline should be a centered text, inside a hero section (with violet design with muitply effects and parralax effect too)
+
+- Now, there should be a view icon in The Outline. it will become a page with view only. So everything is laid out. And also sharable. This is like an invitation to your partner.
+- And then outside this page, back on the Fleeting Frames, we can show the Outline or the list of activities. it should auto scroll infinitely
+
+D. The Story
+- The Story should be also a similar section like the Prologue.
+- Now, this is the highlight. it should have a subtle button to upload images
+- It should be creative, like an instagram feed, but the layout are not fixed sizes. it should scale wether the photo is vertical or horizontal
+- now here's the tricky part. The layout should have even spacing and consistent sizes. Now depending on the pictures, it shoudl occupy the space dynamically, even if they are horizontal or vetical. And everything must be visible (not too scaled down or scaled up). Everything should have a dynamic setting.
+- pictues should have a zoom in effect in hover (the image zooms in, but its clipped in the frame) Liek a magnifying glass effect. It enlarges itself but the expanding pixels are masked by its parent container. 
+- When a photo is clicked, it should open a modal as a full picture in a window. And then X button, or click outside will exit the modal.
+
+- Now it is also an important feature. Remember the Framelist? I said those are sets of pictures. SO if it is set, we have to creatively display the pictures by category. And also displaying those Categories (the words set in the FrameList). 
+- If not set, everything is just displayed as-is without categorization. 
+- The challenge is how to do this eastehtically and convincingly, so that category layouts feel more planned, intended, and captivating.
+
+E. The Afterword. 
+
+- I want to improve the questions. These are some samples (Everything is optional)
+
+{
+
+    The Afterword
+
+Every story ends with a moment of reflection.
+
+The Afterword is where two authors look back on the chapter they've written together. There are no right answers—only memories worth preserving.
+
+1. The Keepsake
+
+The chapter begins by choosing the one Frame that best represents the story.
+
+Prompts
+Which Frame tells this chapter best?
+
+This becomes The Keepsake, the defining image of the chapter.
+
+2. Looking Back
+
+These prompts revisit the events themselves.
+
+They ask, "What happened?"
+
+Prompts
+What surprised you the most?
+What made you laugh the hardest?
+What almost didn't happen?
+What small moment became unexpectedly meaningful?
+What moment almost didn't become a Frame?
+
+These questions often uncover the stories hidden between the photos.
+
+3. Looking Within
+
+This is the emotional heart of Ever After.
+
+Rather than remembering places, it remembers people.
+
+Prompts
+When did you feel closest to me?
+What's one thing you noticed that I might have missed?
+What made this chapter feel like us?
+What's one thing you're grateful for from this chapter?
+What's a moment no camera could have captured?
+What's something you wish we'd said out loud?
+
+These preserve the emotions that photographs alone cannot.
+
+4. Looking Ahead
+
+Memories become more meaningful when they're written for the future.
+
+These prompts encourage couples to leave something for their future selves.
+
+Prompts
+What should our future selves remember from today?
+Years from now, what do you hope this chapter reminds you of?
+What would you never want to change about this chapter?
+What's one tradition from this chapter you'd love to repeat?
+
+This is where Ever After becomes a time capsule rather than a journal.
+}
+
+- I also want to have some choices Or easy to fill up questions. Liek rating the experience, or other forms aside from writing. It would be fun to fill up, but make sure everything is laid out beautifully.
+
+
+- The afterword should also have a hero section of its own, just like the Outline. 
+
+The afterword can become a page of its own (clikcable in the Fleeting Frames Page)
+- It shoould incorporate existing pictures, like a scroller or auto carousel somewhere. So that we can incorporate eeveyrthing into this. Teh Afterword can be a viewing page. And then The Keepsake is a photo Upload form. And the whole chapter will know that that's the Keepsake. Do not overcomplicate it like selecting fro the exisitng photos. Just make it an independent form... And we know this record adn can be displayed along with the main photos
+- Make sure that Airhyl can answer her forms independelty,a nd it will reflect in my view if refreshed. 
+
+- Develop Fleeting Frames here is not appropriate. it should be in the Main Fleeting Frames page. 
+
+
+=================
+
+- Now heres the challenge again in the Main Fleeting Frames Page. We should incorporate the Afterword answers in between the photos so it will be magical. not all questions, just dynamically assign it. Also it should display just the asnwered questions. This can be in a form of banners, small boxes (same size of photos) or something that is more appropriate for my idea. Please think carefully for this
+
+The Develop Fleeting Frames should be in here, at the most bottom
+Also, The afterword's one word question should be displayed in the bottom before the export, with both answers of the couple. 
+Frames can have view details option, which will display collected data. Like who uoloaded it, eetc, absed on the existing schema. Just dont overengineer this. And the details should be displayed only when a photo is clicked, adn the text are presented easthetically. Also, when viewing photos, we need a subtle multiply color on the bottom using our main violet gradient, so the phto is not displayed too sharply. Remmeer to use rounded corners
+
+===
+
+Technical Aspects:
+
+- Right now, I cant upload a picture. Also just call it Upload picture. It says this : "Could not find the 'media_type' column of 'frames' in the schema cache"
+- Also, we need to support multi select pictures. And also lets allow videos for now. And limit the video to 50mb er file only. I will manually instruct my girlfrient to reduce uploading videos to save space. Sooner we will implement actual rate limiting
+- In the Framelist, since those are displpayed as Watiing Frames in the main page, we can also havve a button there, so that when we upload, it belongs to that group.
+- If no framelist, then the active photos will just be under the uncategoriezd Story section. (Do not put uncategorized. Just put it on the most bottom below the categorized). 
+- make sure theres a delete button that activates selection of deletion for picutres. And then there's a modal that will confirm if you want to delete N frames (or something better for the message)
+
+========
+Design Aspect. Overall, everything's nice. Maybe we can just add design details, more color but do not overdo it. use hero sections. Also customize for us. i want this to become a magical experience for my girlfrined. So far, our design system is okay, but I beleive we can still exceed this. By implementing assets, features, textures, colors, while maintaining sleek design and consistency. 
+
+- Also, I encourage you to use gradients. it makes the whole thing become more lively. Also, use Glows on dark violet frames. 
+- These are my recommended colors, please adjust the others accordingly.
+--350E70
+--5115AB
+
+Just adjust the Orange accent. The neutrals are already okay. 

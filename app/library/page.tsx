@@ -22,6 +22,7 @@ export default async function LibraryPage() {
   const firstName = session?.user?.name?.split(' ')[0] ?? 'you';
 
   const stories = await getStories();
+  // Cover lookups run in parallel — one round trip's worth of latency, not N.
   const covers = await Promise.all(stories.map((s) => getCoverUrl(s)));
 
   const hasStories = stories.length > 0;
@@ -54,6 +55,7 @@ export default async function LibraryPage() {
 
       {hasStories ? (
         <>
+          {/* The shelf. 2 up on phones, 3 on tablets, 4 on desktop. */}
           <section className="mb-16 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
             {stories.map((story, i) => (
               <StoryTile key={story.id} story={story} coverUrl={covers[i]} />
@@ -65,6 +67,7 @@ export default async function LibraryPage() {
           </div>
         </>
       ) : (
+        // An empty Library isn't an error state. It's an invitation.
         <section className="flex flex-col items-center py-20 text-center sm:py-28">
           <h2 className="mb-3 font-serif text-3xl italic text-ink">{copy.library.empty}</h2>
           <p className="mb-12 max-w-xs text-sm leading-relaxed text-ink-soft">

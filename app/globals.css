@@ -31,12 +31,77 @@ body::before {
    feels on-brand.
 --------------------------------------------------------------------------- */
 :focus-visible {
-  outline: 2px solid #6b4ea8;
+  outline: 2px solid #6a2bd9;
   outline-offset: 2px;
   border-radius: 2px;
 }
 
 ::selection {
-  background: #a987e8;
-  color: #1e1729;
+  background: #b69af0;
+  color: #350e70;
+}
+
+/* ---------------------------------------------------------------------------
+   PRINT — "Develop this Fleeting Frames"
+   Cmd/Ctrl+P on /story/[slug]/print, then Save as PDF. No PDF library, no
+   headless Chrome. A careful stylesheet gets 90% of a photo book for free.
+
+   Three things that quietly break printing if you don't handle them:
+     1. The paper-grain overlay is `position: fixed` — it would stamp itself
+        on page one and vanish from the rest. Kill it.
+     2. Browsers strip background colours by default. `print-color-adjust`
+        forces our paper + violet through.
+     3. A figure split across a page break looks broken. `break-inside: avoid`.
+--------------------------------------------------------------------------- */
+@media print {
+  body::before {
+    display: none; /* the grain */
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-sheet {
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Never split a photo away from its caption, or a heading from its section */
+  .print-frame,
+  figure,
+  .print-section > header,
+  .print-section h2,
+  .print-section h3 {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-break {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  /* Print engines lazy-load nothing; make sure images are eager and sized */
+  img {
+    max-width: 100%;
+    break-inside: avoid;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  @page {
+    margin: 18mm 14mm;
+  }
 }
