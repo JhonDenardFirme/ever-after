@@ -295,6 +295,26 @@ export async function setKeepsake(
 }
 
 /**
+ * Un-set The Keepsake. Only clears keepsake_frame_id — the cover it may have
+ * adopted stays put (that's a separate choice), so nothing visually breaks.
+ * Lets you re-choose freely.
+ */
+export async function removeKeepsake(storyId: string, slug: string): Promise<Result> {
+  return attempt(async () => {
+    await requireAuthor();
+
+    const { error } = await supabaseAdmin()
+      .from('stories')
+      .update({ keepsake_frame_id: null })
+      .eq('id', storyId);
+    if (error) return { ok: false, error: error.message };
+
+    refresh(slug);
+    return { ok: true, data: undefined };
+  });
+}
+
+/**
  * Delete a Frame permanently — the row AND the file.
  *
  * The most destructive action in the app. The UI asks first, with the exact

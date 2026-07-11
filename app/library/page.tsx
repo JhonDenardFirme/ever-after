@@ -1,81 +1,101 @@
 // -----------------------------------------------------------------------------
-// app/library/page.tsx — The Library.
+// app/library/page.tsx — The Library (1.2).
 //
-// Server Component: it awaits the session and the stories directly. No
-// useEffect, no spinner, no client fetch — the shelf is rendered before the
-// HTML leaves the server.
+// Server Component: awaits the session, the couple hero, the current author (for
+// their avatar), and the stories directly. No client fetch — the whole shelf is
+// rendered before the HTML leaves the server.
 //
-// force-dynamic because a newly created story must appear immediately.
-// Without it, Next.js would happily serve a cached empty shelf.
+// 1.2 layout: a top bar (brand · Begin + profile, upper-right), the couple hero
+// as the highlight, then the described shelf of stories, then a footer.
+//
+// force-dynamic because a newly created story — or an edited couple hero — must
+// appear immediately.
 // -----------------------------------------------------------------------------
 
 import { auth, signOut } from '@/lib/auth';
 import { copy } from '@/lib/copy';
-import { getStories, getCoverUrl } from '@/lib/queries';
+import { getStories, getCoverUrl, getCouple, getCurrentAuthor } from '@/lib/queries';
 import StoryTile from '@/components/library/StoryTile';
 import BeginChapter from '@/components/library/BeginChapter';
+import CoupleHero from '@/components/library/CoupleHero';
+import ProfileMenu from '@/components/library/ProfileMenu';
 
 export const dynamic = 'force-dynamic';
 
 export default async function LibraryPage() {
   const session = await auth();
-  const firstName = session?.user?.name?.split(' ')[0] ?? 'you';
+  const name = session?.user?.name ?? 'you';
+  const email = session?.user?.email ?? '';
+  const image = session?.user?.image ?? null;
 
-  const stories = await getStories();
+  const [stories, couple, me] = await Promise.all([getStories(), getCouple(), getCurrentAuthor()]);
   // Cover lookups run in parallel — one round trip's worth of latency, not N.
   const covers = await Promise.all(stories.map((s) => getCoverUrl(s)));
 
   const hasStories = stories.length > 0;
 
-  return (
-    <main className="mx-auto min-h-dvh max-w-5xl px-6 py-12 sm:py-16">
-      <header className="mb-16 flex items-start justify-between gap-6">
-        <div>
-          <p className="mb-2 text-[11px] uppercase tracking-[0.28em] text-ink-soft">
-            {copy.brand.name}
-          </p>
-          <h1 className="font-serif text-4xl text-ink sm:text-5xl">{copy.library.title}</h1>
-          <p className="mt-3 text-sm text-ink-soft">{copy.library.greeting(firstName)}</p>
-        </div>
+  async function doSignOut() {
+    'use server';
+    await signOut({ redirectTo: '/signin' });
+  }
 
-        <form
-          action={async () => {
-            'use server';
-            await signOut({ redirectTo: '/signin' });
-          }}
-        >
-          <button
-            type="submit"
-            className="shrink-0 rounded-full border border-rule px-4 py-2 text-xs tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
-          >
-            {copy.nav.signOut}
-          </button>
-        </form>
+  return (
+    <main className="mx-auto min-h-dvh max-w-6xl px-6 py-8 sm:py-10">
+      {/* ---- Top bar ---- */}
+      <header className="mb-12 flex items-center justify-between gap-4">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-ink-soft">{copy.brand.name}</p>
+
+        <div className="flex items-center gap-3">
+          <BeginChapter />
+          <ProfileMenu
+            name={name}
+            email={email}
+            image={image}
+            avatarUrl={me?.avatar_url ?? null}
+            signOutAction={doSignOut}
+          />
+        </div>
       </header>
 
-      {hasStories ? (
-        <>
-          {/* The shelf. 2 up on phones, 3 on tablets, 4 on desktop. */}
-          <section className="mb-16 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+      {/* ---- The couple: the highlight of the page ---- */}
+      <CoupleHero couple={couple} />
+
+      {/* ---- The shelf ---- */}
+      <section id="shelf" className="scroll-mt-8">
+        <div className="mb-8">
+          <p className="mb-2 text-[10px] uppercase tracking-[0.3em] text-ember">
+            {copy.library.shelfEyebrow}
+          </p>
+          <h1 className="mb-3 bg-ever-gradient bg-clip-text font-serif text-4xl text-transparent sm:text-5xl">
+            {hasStories ? copy.library.shelfTitle : copy.library.empty}
+          </h1>
+          <p className="max-w-lg text-sm leading-relaxed text-ink-soft">
+            {hasStories ? copy.library.shelfDescription : copy.library.firstVisit}
+          </p>
+        </div>
+
+        {hasStories ? (
+          <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-6">
             {stories.map((story, i) => (
               <StoryTile key={story.id} story={story} coverUrl={covers[i]} />
             ))}
-          </section>
-
-          <div className="flex justify-center border-t border-rule pt-12">
-            <BeginChapter />
           </div>
-        </>
-      ) : (
-        // An empty Library isn't an error state. It's an invitation.
-        <section className="flex flex-col items-center py-20 text-center sm:py-28">
-          <h2 className="mb-3 font-serif text-3xl italic text-ink">{copy.library.empty}</h2>
-          <p className="mb-12 max-w-xs text-sm leading-relaxed text-ink-soft">
-            {copy.library.firstVisit}
-          </p>
-          <BeginChapter />
-        </section>
-      )}
+        ) : (
+          <div className="rounded-2xl border border-dashed border-rule-strong bg-paper2/50 px-6 py-20 text-center">
+            <p className="mx-auto mb-8 max-w-xs text-sm leading-relaxed text-ink-soft">
+              {copy.library.firstVisit}
+            </p>
+            <div className="flex justify-center">
+              <BeginChapter />
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ---- Footer ---- */}
+      <footer className="mt-20 border-t border-rule pt-8 text-center">
+        <p className="font-serif text-sm italic text-ink-soft">{copy.library.footer}</p>
+      </footer>
     </main>
   );
 }

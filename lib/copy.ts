@@ -44,6 +44,31 @@ export const copy = {
     untitled: 'Untitled',
     // Shown under each tile
     noSetting: 'Somewhere, someday',
+    // 1.2 — the shelf now sits below the couple hero and earns a heading of its own.
+    shelfEyebrow: 'The Library',
+    shelfTitle: 'Every story we’ve kept',
+    shelfDescription:
+      'Each spine below is a Fleeting Frames — a trip, a season, a day worth developing. Open one to read it again.',
+    footer: 'Developed by Denard, with love.',
+  },
+
+  // The couple hero — the highlight of The Library. Editable, then it rests
+  // back into a view. This is the "who we are" of the whole book.
+  couple: {
+    eyebrow: 'The two of us',
+    headlinePlaceholder: 'Denard & Airhyl',
+    storyPlaceholder: 'The short version of how we got here…',
+    memberOne: { namePlaceholder: 'Your name', notePlaceholder: 'Hi, I’m…' },
+    memberTwo: { namePlaceholder: 'Her name', notePlaceholder: 'Hi, I’m…' },
+    greet: (name: string) => `Hi, I’m ${name}`,
+    edit: 'Edit',
+    save: 'Keep',
+    cancel: 'Not yet',
+    saving: 'Keeping…',
+    saveError: "That didn't save. Try again?",
+    addPhoto: 'Add a photo',
+    changePhoto: 'Change photo',
+    empty: 'Introduce the two of you.',
   },
 
   prologue: {
@@ -76,6 +101,39 @@ export const copy = {
     startsOn: 'From',
     endsOn: 'Until',
     toStoryboard: 'Open the storyboard',
+    // 1.2 — the Prologue now rests in a view; a small icon opens the form.
+    sectionEyebrow: 'The Prologue',
+    sectionTitle: 'How it began.',
+    tagline: 'The opening pages — where and when, and the words we opened with.',
+    edit: 'Edit the prologue',
+    done: 'Done editing',
+    empty: 'The Prologue is unwritten. Open it and begin.',
+    // Cover controls
+    cover: 'Cover',
+    addCover: 'Add a cover',
+    changeCover: 'Change cover',
+    removeCover: 'Remove cover photo',
+    coverUploading: 'Keeping…',
+  },
+
+  // The Spotify soundtrack (1.2). We store the pasted link in stories.soundtrack
+  // and render Spotify's own embed for real playback — cross-origin autoplay
+  // isn't ours to control, so the disc beside it is an honest flourish, not a
+  // fake transport.
+  soundtrack: {
+    eyebrow: 'The Soundtrack',
+    sectionTitle: 'What it sounded like.',
+    tagline: 'The song that played underneath it all.',
+    add: 'Add a soundtrack',
+    prompt: 'Paste a Spotify link',
+    placeholder: 'https://open.spotify.com/track/…',
+    save: 'Keep',
+    cancel: 'Not yet',
+    edit: 'Change the song',
+    saving: 'Keeping…',
+    hint: 'Press play in the player to listen.',
+    asNote: 'Kept as a note — paste a Spotify link for a player.',
+    saveError: "That didn't save. Try again?",
   },
 
   storyboard: {
@@ -159,6 +217,7 @@ export const copy = {
     captionPlaceholder: 'Say something about this one.',
     // Keepsake
     markKeepsake: 'Mark as The Keepsake',
+    removeKeepsake: 'Remove as The Keepsake',
     keepsake: 'The Keepsake',
     keepsakeSet: 'Marked as The Keepsake.',
     // Deletion — the exact copy from masterfile §7. Do not soften.
@@ -181,6 +240,18 @@ export const copy = {
     developedBy: (name: string) => `${name} developed this`,
     waitingFor: (name: string) => `${name} left this, waiting`,
     toFrames: 'Read the story',
+    // 1.2 — The Story feed (photo feed on the main album page)
+    eyebrowTitle: 'The Story',
+    lead: 'Everything, one Frame at a time.',
+    tagline: 'Every Frame we developed, set by set.',
+    uploadToSet: (label: string) => `Add to “${label}”`,
+    details: 'Details',
+    close: 'Close',
+    developedOn: (date: string) => date,
+    by: (name: string) => `By ${name}`,
+    addCaption: 'Add a caption',
+    removeCaption: 'Remove caption',
+    saveCaption: 'Keep',
   },
 
   afterword: {
@@ -249,6 +320,11 @@ export const copy = {
 
   nav: {
     signOut: 'Close the book for now',
+    // 1.2 profile menu (upper-right on The Library)
+    profileEyebrow: 'Signed in as',
+    editProfile: 'Change your photo',
+    profileUploading: 'Keeping…',
+    jumpToShelf: 'The Library',
   },
 } as const;
 

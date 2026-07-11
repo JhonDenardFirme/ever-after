@@ -46,8 +46,9 @@ export const pageTurn: Variants = {
 export const shelfLift: Variants = {
   rest: { y: 0, boxShadow: '0 1px 2px rgba(42, 34, 49, 0.08)' },
   hover: {
-    y: -6,
-    boxShadow: '0 14px 28px rgba(42, 34, 49, 0.14)',
+    y: -8,
+    // 1.2: the lift now carries a violet glow instead of a plain grey shadow.
+    boxShadow: '0 18px 40px rgba(53, 14, 112, 0.28)',
     transition: { duration: 0.2, ease: settle },
   },
 };

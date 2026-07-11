@@ -19,12 +19,22 @@ const config: Config = {
         ink: '#2A2231',          // body text — violet-tinted black, never pure #000
         'ink-soft': '#6B6156',   // secondary text
 
-        violet: '#4A3668',       // primary actions, headings on paper
-        'violet-2': '#6B4EA8',   // hover, interactive states
-        'violet-3': '#A987E8',   // accents on dark surfaces
-        'violet-deep': '#1E1729',// the ONLY dark surface (Story view, photo bleeds)
+        // 1.2 palette — richer, more saturated violet (Denard's #5115AB / #350E70),
+        // with -2/-3 re-tuned to sit between primary and the deep surface.
+        violet: '#5115AB',       // primary actions, headings on paper
+        'violet-2': '#6C2BD9',   // hover, interactive states — brighter than primary
+        'violet-3': '#B99CF5',   // accents on dark surfaces (light)
+        'violet-deep': '#350E70',// the deep violet surface (Story view, photo bleeds, heroes)
 
-        ember: '#E0722F',        // HIGHLIGHT ONLY. a dot, a rule, a number.
+        ember: '#F97316',        // HIGHLIGHT ONLY. a dot, a rule, a number. Brightened for 1.2.
+      },
+      backgroundImage: {
+        // 1.2 gradients. The signature violet→ember reserved for the main title
+        // and section headers (via bg-clip-text). The bleed is the violet
+        // multiply-feel overlay laid at the bottom of photos and heroes.
+        'ever-gradient': 'linear-gradient(92deg, #5115AB 0%, #F97316 100%)',
+        'violet-bleed': 'linear-gradient(to top, rgba(53,14,112,0.85) 0%, rgba(53,14,112,0.15) 45%, rgba(53,14,112,0) 100%)',
+        'violet-hero': 'linear-gradient(135deg, #350E70 0%, #5115AB 55%, #6C2BD9 100%)',
       },
       fontFamily: {
         // Serif = anything the STORY says. Sans = anything the INTERFACE says.

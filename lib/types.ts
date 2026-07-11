@@ -17,7 +17,22 @@ export interface Author {
   email: string;
   name: string;       // "Denard"
   nickname: string | null; // "Happy Pill"
+  avatar_url: string | null; // 1.2: uploaded picture; null → fall back to the Google image
   created_at: string;
+}
+
+// The editable couple hero on The Library (1.2). One row, id is always 1.
+export interface Couple {
+  id: number;
+  headline: string | null;
+  story: string | null;
+  member_one_name: string | null;
+  member_one_note: string | null;
+  member_one_photo_url: string | null;
+  member_two_name: string | null;
+  member_two_note: string | null;
+  member_two_photo_url: string | null;
+  updated_at: string;
 }
 
 // A "Fleeting Frames" — one story. The Prologue lives here as columns.
@@ -33,6 +48,7 @@ export interface Story {
   epigraph: string | null;
   description: string | null;
   soundtrack: string | null;
+  cover_url: string | null;    // 1.2: uploaded cover, independent of any Frame
   cover_frame_id: string | null;
   keepsake_frame_id: string | null;
   created_at: string;

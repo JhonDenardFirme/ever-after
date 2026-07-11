@@ -46,65 +46,76 @@ export default function BeginChapter() {
     });
   }
 
-  if (!open) {
-    return (
+  // 1.2: a compact pill that lives in the header's upper-right; the form opens
+  // as a popover beneath it (right-aligned) instead of a big centered block, so
+  // it can sit beside the profile circle without disrupting the layout.
+  return (
+    <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen(true)}
-        className="rounded-full bg-violet px-7 py-3.5 text-sm tracking-wide text-paper transition-colors hover:bg-violet-2"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex items-center gap-2 rounded-full bg-violet px-5 py-3 text-sm tracking-wide text-paper shadow-glow-soft transition-colors hover:bg-violet-2"
       >
-        {copy.library.begin}
+        <span className="text-base leading-none">+</span>
+        <span className="hidden sm:inline">{copy.library.begin}</span>
       </button>
-    );
-  }
 
-  return (
-    <div className="w-full max-w-sm">
-      <label
-        htmlFor="story-title"
-        className="mb-2 block text-center font-serif text-lg italic text-ink"
-      >
-        {copy.library.beginPrompt}
-      </label>
+      {open && (
+        <>
+          <button
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+          <div className="absolute right-0 z-50 mt-3 w-72 rounded-2xl border border-rule bg-paper2 p-5 shadow-glow">
+            <label htmlFor="story-title" className="mb-2 block text-center font-serif text-lg italic text-ink">
+              {copy.library.beginPrompt}
+            </label>
 
-      <input
-        ref={inputRef}
-        id="story-title"
-        value={title}
-        disabled={isPending}
-        placeholder={copy.library.beginPlaceholder}
-        onChange={(e) => setTitle(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') submit();
-          if (e.key === 'Escape') setOpen(false);
-        }}
-        className="mb-3 w-full rounded-lg border border-rule bg-paper2 px-4 py-3 text-center font-serif text-lg text-ink placeholder:text-ink-soft/50 disabled:opacity-60"
-      />
+            <input
+              ref={inputRef}
+              id="story-title"
+              value={title}
+              disabled={isPending}
+              placeholder={copy.library.beginPlaceholder}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submit();
+                if (e.key === 'Escape') setOpen(false);
+              }}
+              className="mb-3 w-full rounded-lg border border-rule bg-paper px-4 py-3 text-center font-serif text-lg text-ink outline-none placeholder:text-ink-soft/50 focus:border-violet-2 disabled:opacity-60"
+            />
 
-      {error && (
-        <p role="alert" className="mb-3 text-center text-xs text-ember">
-          {error}
-        </p>
+            {error && (
+              <p role="alert" className="mb-3 text-center text-xs text-ember">
+                {error}
+              </p>
+            )}
+
+            <div className="flex justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                disabled={isPending}
+                className="rounded-full border border-rule px-5 py-2.5 text-xs tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
+              >
+                {copy.library.beginCancel}
+              </button>
+              <button
+                type="button"
+                onClick={submit}
+                disabled={isPending || !title.trim()}
+                className="rounded-full bg-violet px-6 py-2.5 text-xs tracking-wide text-paper transition-colors hover:bg-violet-2 disabled:opacity-50"
+              >
+                {isPending ? copy.prologue.saving : copy.library.beginConfirm}
+              </button>
+            </div>
+          </div>
+        </>
       )}
-
-      <div className="flex justify-center gap-2">
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          disabled={isPending}
-          className="rounded-full border border-rule px-5 py-2.5 text-xs tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
-        >
-          {copy.library.beginCancel}
-        </button>
-        <button
-          type="button"
-          onClick={submit}
-          disabled={isPending || !title.trim()}
-          className="rounded-full bg-violet px-6 py-2.5 text-xs tracking-wide text-paper transition-colors hover:bg-violet-2 disabled:opacity-50"
-        >
-          {isPending ? copy.prologue.saving : copy.library.beginConfirm}
-        </button>
-      </div>
     </div>
   );
 }

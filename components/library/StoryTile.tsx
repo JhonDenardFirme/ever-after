@@ -27,34 +27,38 @@ export default function StoryTile({ story, coverUrl }: { story: Story; coverUrl:
   const when = years(story);
 
   return (
-    <motion.div variants={lift} initial="rest" whileHover="hover" whileFocus="hover">
+    <motion.div variants={lift} initial="rest" whileHover="hover" whileFocus="hover" className="rounded-2xl">
       <Link
         href={`/story/${story.slug}`}
-        className="block overflow-hidden rounded-xl border border-rule bg-paper2"
+        className="block overflow-hidden rounded-2xl border border-rule bg-paper2"
       >
-        {/* Cover. Phase 4 fills this with a real Frame; until then it's a
-            quiet violet field — absence, not a broken image icon. */}
-        <div className="relative aspect-[3/4] overflow-hidden bg-violet-deep">
+        {/* Cover. A real Frame once one is developed; until then a rich violet
+            field with the theme — absence, not a broken image icon. A violet
+            bleed at the base grounds the image and carries the title label. */}
+        <div className="relative aspect-[3/4] overflow-hidden bg-violet-hero">
           {coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={coverUrl} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-end p-4">
-              <span className="font-serif text-lg italic leading-tight text-violet-3/70">
+            <div className="flex h-full items-end p-5">
+              <span className="font-serif text-xl italic leading-tight text-paper/85">
                 {story.theme ?? ''}
               </span>
             </div>
           )}
-        </div>
 
-        <div className="px-4 py-3.5">
-          <h3 className="mb-1 font-serif text-lg leading-snug text-ink">
-            {story.title || copy.library.untitled}
-          </h3>
-          <p className="text-[11px] uppercase tracking-[0.16em] text-ink-soft">
-            {story.setting ?? copy.library.noSetting}
-            {when ? ` · ${when}` : ''}
-          </p>
+          {/* the violet bleed — softens the photo and seats the caption */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-violet-bleed" />
+
+          <div className="absolute inset-x-0 bottom-0 p-5">
+            <h3 className="font-serif text-2xl leading-snug text-paper drop-shadow-sm">
+              {story.title || copy.library.untitled}
+            </h3>
+            <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-paper/70">
+              {story.setting ?? copy.library.noSetting}
+              {when ? ` · ${when}` : ''}
+            </p>
+          </div>
         </div>
       </Link>
     </motion.div>

@@ -15,7 +15,22 @@ import 'server-only';
 
 import { auth } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-import type { Story, Chapter, Frame, Author, AfterwordQuestion, AfterwordEntry } from '@/lib/types';
+import type { Story, Chapter, Frame, Author, AfterwordQuestion, AfterwordEntry, Couple } from '@/lib/types';
+
+/** The couple hero (1.2). One row, id = 1. Null until they introduce themselves. */
+export async function getCouple(): Promise<Couple | null> {
+  const { data, error } = await supabaseAdmin()
+    .from('couple')
+    .select('*')
+    .eq('id', 1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[queries] getCouple:', error.message);
+    return null;
+  }
+  return (data as Couple) ?? null;
+}
 
 /** Every story, newest first. Powers The Library. */
 export async function getStories(): Promise<Story[]> {
@@ -52,6 +67,8 @@ export async function getStoryBySlug(slug: string): Promise<Story | null> {
  * renders its empty state. Phase 4 makes it real without touching the hero.
  */
 export async function getCoverUrl(story: Story): Promise<string | null> {
+  // 1.2: an explicitly uploaded cover wins over the borrowed Keepsake cover.
+  if (story.cover_url) return story.cover_url;
   if (!story.cover_frame_id) return null;
 
   const { data, error } = await supabaseAdmin()

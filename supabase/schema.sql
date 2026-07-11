@@ -17,7 +17,22 @@ create table if not exists authors (
   email       text not null unique,
   name        text not null,          -- "Denard"
   nickname    text,                   -- "Happy Pill"
+  avatar_url  text,                   -- 1.2: uploaded profile picture; falls back to the Google image
   created_at  timestamptz default now()
+);
+
+-- The couple hero on The Library (1.2). Single row, enforced by check (id = 1).
+create table if not exists couple (
+  id                   int primary key default 1 check (id = 1),
+  headline             text,   -- "Denard & Airhyl"
+  story                text,   -- a short paragraph about the two of them
+  member_one_name      text,
+  member_one_note      text,   -- their little "Hi, I'm ..." line
+  member_one_photo_url text,
+  member_two_name      text,
+  member_two_note      text,
+  member_two_photo_url text,
+  updated_at           timestamptz default now()
 );
 
 -- A Fleeting Frames. The Prologue lives here as columns.
@@ -33,6 +48,7 @@ create table if not exists stories (
   epigraph          text,
   description       text,
   soundtrack        text,
+  cover_url         text,                       -- 1.2: uploaded story cover (independent of any Frame)
   cover_frame_id    uuid,                       -- FK added below (frames doesn't exist yet)
   keepsake_frame_id uuid,                       -- FK added below
   created_at        timestamptz default now(),
@@ -116,6 +132,7 @@ create index if not exists idx_aw_questions_story on afterword_questions(story_i
 -- RLS entirely. Authorization = the NextAuth email allowlist.
 -- ============================================================
 alter table authors             enable row level security;
+alter table couple              enable row level security;
 alter table stories             enable row level security;
 alter table chapters            enable row level security;
 alter table frames              enable row level security;
@@ -128,6 +145,11 @@ alter table afterword_entries   enable row level security;
 -- ============================================================
 insert into storage.buckets (id, name, public)
 values ('frames', 'frames', true)
+on conflict (id) do nothing;
+
+-- 1.2: avatars + couple photos live here, also public-read.
+insert into storage.buckets (id, name, public)
+values ('profiles', 'profiles', true)
 on conflict (id) do nothing;
 
 -- ============================================================

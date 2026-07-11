@@ -93,12 +93,13 @@ export default async function AfterwordPage({ params }: { params: { slug: string
         </div>
       )}
 
+      {/* Develop moved to the album's foot in 1.2 — from here, just a way back. */}
       <div className="mt-16 border-t border-rule pt-10 text-center">
         <Link
-          href={`/story/${story.slug}/print`}
-          className="inline-block rounded-full bg-violet px-7 py-3.5 text-sm tracking-wide text-paper transition-colors hover:bg-violet-2"
+          href={`/story/${story.slug}`}
+          className="inline-block rounded-full border border-rule px-7 py-3.5 text-sm tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
         >
-          {copy.print.action}
+          ← {story.title}
         </Link>
       </div>
     </main>
