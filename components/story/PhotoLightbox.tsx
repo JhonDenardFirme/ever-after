@@ -17,6 +17,7 @@ import { deleteFrame, updateCaption } from '@/app/actions/frames';
 import { setMyKeepsake, removeMyKeepsake } from '@/app/actions/afterword';
 import { copy } from '@/lib/copy';
 import { glowGradient } from '@/lib/gradients';
+import StarField from '@/components/ui/StarField';
 import { StarIcon, TrashIcon, PlusIcon } from '@/components/ui/icons';
 import type { Frame, Author } from '@/lib/types';
 
@@ -125,15 +126,17 @@ export default function PhotoLightbox({
       >
         {/* Media */}
         <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden">
+          {/* star texture on the gradient, behind the photo */}
+          <StarField className="opacity-40" />
           {frame.media_url &&
             (frame.media_type === 'video' ? (
-              <video src={frame.media_url} controls playsInline className="max-h-[70vh] w-full object-contain" />
+              <video src={frame.media_url} controls playsInline className="relative z-10 max-h-[70vh] w-full object-contain" />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={frame.media_url}
                 alt={savedCaption || ''}
-                className="max-h-[70vh] w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                className="relative z-10 max-h-[70vh] w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
               />
             ))}
           {/* a whisper of violet at the base, not a wash */}
@@ -150,7 +153,10 @@ export default function PhotoLightbox({
         {/* Details — the neutral white panel (the image side carries the glow) */}
         <aside className="flex w-full shrink-0 flex-col justify-between gap-5 border-t border-rule bg-paper p-6 sm:w-80 sm:border-l sm:border-t-0">
           <div>
-            <p className="mb-4 text-[10px] uppercase tracking-[0.24em] text-ember">{copy.frames.details}</p>
+            <div className="mb-4 flex items-center gap-3">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-ember">{copy.frames.details}</p>
+              <span className="h-px flex-1 bg-rule" />
+            </div>
 
             {/* Caption — add / edit / remove */}
             <div className="mb-5">

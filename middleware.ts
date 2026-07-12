@@ -14,7 +14,8 @@
 export { auth as middleware } from '@/lib/auth';
 
 export const config = {
-  // Match everything EXCEPT: NextAuth internals, Next static assets,
-  // image optimizer, favicon, and the signin page itself (or we'd loop).
-  matcher: ['/((?!api/auth|_next/static|_next/image|favicon.ico|signin).*)'],
+  // Match everything EXCEPT: NextAuth internals, Next static assets, image
+  // optimizer, favicon, the signin page itself (or we'd loop), and any
+  // Invitation page — those are deliberately PUBLIC (shareable, read-only).
+  matcher: ['/((?!api/auth|_next/static|_next/image|favicon.ico|signin|.*/invitation).*)'],
 };

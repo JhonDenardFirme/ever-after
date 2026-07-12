@@ -17,17 +17,15 @@
 // aware. The cover is fully changeable (Edit cover → change / remove).
 // -----------------------------------------------------------------------------
 
-import { useRef, useState, useTransition } from 'react';
+import { useState } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react';
-import imageCompression from 'browser-image-compression';
-import { setStoryCover, removeStoryCover } from '@/app/actions/stories';
 import { copy } from '@/lib/copy';
 import StarDivider from '@/components/ui/StarDivider';
-import StarField from '@/components/ui/StarField';
+import StarsBackground from '@/components/ui/StarsBackground';
 import BackLink from '@/components/ui/BackLink';
+import CoverControls from './CoverControls';
 import { SparkIcon } from '@/components/ui/icons';
 
-const COMPRESSION = { maxSizeMB: 0.9, maxWidthOrHeight: 2200, useWebWorker: true };
 const SHADOW = '[text-shadow:0_2px_20px_rgba(0,0,0,0.28)]';
 
 export default function CoverBanner({
@@ -46,48 +44,10 @@ export default function CoverBanner({
   metaParts: string[];
 }) {
   const reduced = useReducedMotion();
-  const inputRef = useRef<HTMLInputElement>(null);
   const [cover, setCover] = useState<string | null>(coverUrl);
-  const [pending, setPending] = useState(false);
-  const [isRemoving, startRemove] = useTransition();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, (v) => (reduced ? 0 : v * 0.12));
-
-  async function pick(file: File) {
-    setError(null);
-    setMenuOpen(false);
-    setPending(true);
-    try {
-      let upload: File | Blob = file;
-      try {
-        upload = await imageCompression(file, COMPRESSION);
-      } catch {
-        /* fall back to the original */
-      }
-      const fd = new FormData();
-      fd.set('file', upload, file.name);
-      const result = await setStoryCover(storyId, slug, fd);
-      if (result.ok) setCover(result.data.cover_url);
-      else setError(result.error);
-    } finally {
-      setPending(false);
-    }
-  }
-
-  function remove() {
-    setError(null);
-    setMenuOpen(false);
-    startRemove(async () => {
-      const result = await removeStoryCover(storyId, slug);
-      if (result.ok) setCover(null);
-      else setError(result.error);
-    });
-  }
-
-  const busy = pending || isRemoving;
 
   return (
     <section className="relative h-[65vh] min-h-[520px] w-full overflow-hidden md:h-[72vh] lg:h-[90vh]">
@@ -95,7 +55,7 @@ export default function CoverBanner({
       <motion.div style={{ y }} className="absolute inset-0 -bottom-16">
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt="" className="ever-hero-scale h-full w-full object-cover object-center" />
+          <img src={cover} alt="" className="ever-kenburns h-full w-full object-cover object-center" />
         ) : (
           <div className="h-full w-full bg-violet-hero" />
         )}
@@ -108,7 +68,7 @@ export default function CoverBanner({
       <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(60% 55% at 50% 40%, rgba(124,58,237,0.35) 0%, rgba(124,58,237,0) 46%, rgba(249,115,22,0.12) 74%, rgba(249,115,22,0) 100%)' }} />
       <div className="pointer-events-none absolute left-1/2 top-[36%] h-[62vh] w-[62vh] -translate-x-1/2 -translate-y-1/2 rounded-full mix-blend-soft-light blur-[130px]" style={{ background: 'rgba(255,242,222,0.16)' }} />
       <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(120% 120% at 50% 42%, rgba(0,0,0,0) 55%, rgba(15,6,30,0.55) 100%)' }} />
-      <StarField />
+      <StarsBackground opacity={0.5} />
       {/* slow drifting bloom — the "moving" feel, over the 100->103% scale */}
       <motion.div
         aria-hidden="true"
@@ -122,50 +82,9 @@ export default function CoverBanner({
       {/* ---- Back (top-left) ---- */}
       <BackLink href="/library" label={copy.prologue.back} onDark className="absolute left-5 top-5 z-20" />
 
-      {/* ---- Edit cover (top-right) ---- */}
+      {/* ---- Cover controls (top-right): Edit cover + the ⋯ menu ---- */}
       <div className="absolute right-5 top-5 z-20">
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            e.target.value = '';
-            if (f) pick(f);
-          }}
-        />
-        <button
-          type="button"
-          onClick={() => setMenuOpen((o) => !o)}
-          disabled={busy}
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          className="flex items-center gap-1.5 rounded-full border border-white/25 bg-white/[0.12] px-4 py-2 text-[11px] tracking-wide text-paper/90 backdrop-blur-sm transition-colors hover:bg-white/20 hover:text-paper disabled:opacity-60"
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
-          </svg>
-          {busy ? copy.prologue.coverUploading : copy.prologue.editCover}
-        </button>
-
-        {menuOpen && (
-          <>
-            <button type="button" aria-hidden="true" tabIndex={-1} onClick={() => setMenuOpen(false)} className="fixed inset-0 z-0 cursor-default" />
-            <div role="menu" className="absolute right-0 z-10 mt-2 w-48 overflow-hidden rounded-xl border border-white/15 bg-violet-deep/80 py-1 text-paper shadow-glow backdrop-blur-xl">
-              <button type="button" onClick={() => inputRef.current?.click()} className="block w-full px-4 py-2.5 text-left text-sm text-paper/90 transition-colors hover:bg-white/10">
-                {cover ? copy.prologue.changeCover : copy.prologue.addCover}
-              </button>
-              {cover && (
-                <button type="button" onClick={remove} className="block w-full px-4 py-2.5 text-left text-sm text-violet-3 transition-colors hover:bg-white/10 hover:text-ember">
-                  {copy.prologue.removeCover}
-                </button>
-              )}
-            </div>
-          </>
-        )}
-        {error && <p role="alert" className={`mt-1 max-w-[12rem] text-right text-[11px] text-paper ${SHADOW}`}>{error}</p>}
+        <CoverControls storyId={storyId} slug={slug} cover={cover} onCoverChange={setCover} />
       </div>
 
       {/* ---- Content, seated low so it never crowds the centre of the photo ---- */}

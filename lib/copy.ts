@@ -400,6 +400,21 @@ export const copy = {
     lead: "Whatever you were looking for isn't in the library.",
   },
 
+  // The 3-dots menu on a Fleeting Frames cover — clear or delete the whole thing.
+  storyMenu: {
+    more: 'More',
+    clear: 'Clear this chapter',
+    clearConfirm:
+      'This empties the chapter — every Frame, Moment, and image gone — but keeps the chapter itself. Are you sure?',
+    clearing: 'Clearing…',
+    delete: 'Delete this chapter',
+    deleteConfirm:
+      'This whole Fleeting Frames will be gone for good — every Frame, Moment, and reflection, from everywhere. Are you sure?',
+    deleting: 'Deleting…',
+    confirmYes: 'Yes, I’m sure',
+    confirmNo: 'Not yet',
+  },
+
   nav: {
     signOut: 'Close the book for now',
     // 1.2 profile menu (upper-right on The Library)

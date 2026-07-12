@@ -185,6 +185,80 @@ export async function setStoryCover(
 }
 
 /**
+ * Remove every Frame belonging to a story (rows + storage) — the frames reached
+ * either through a Moment or directly via story_id. Rows first, objects second.
+ */
+async function purgeStoryFrames(db: ReturnType<typeof supabaseAdmin>, storyId: string): Promise<void> {
+  const { data: chapters } = await db.from('chapters').select('id').eq('story_id', storyId);
+  const ids = (chapters ?? []).map((c) => c.id as string);
+  const orParts = [`story_id.eq.${storyId}`];
+  if (ids.length > 0) orParts.push(`chapter_id.in.(${ids.join(',')})`);
+  const filter = orParts.join(',');
+
+  const { data: frames } = await db.from('frames').select('storage_path').or(filter);
+  const paths = (frames ?? [])
+    .map((f) => f.storage_path as string | null)
+    .filter((p): p is string => Boolean(p));
+
+  await db.from('frames').delete().or(filter);
+  if (paths.length > 0) {
+    const { error } = await db.storage.from(COVER_BUCKET).remove(paths);
+    if (error) console.error('[purgeStoryFrames] orphaned objects:', error.message);
+  }
+}
+
+/**
+ * Clear a Fleeting Frames — empty every Frame, Moment, and Afterword answer (and
+ * their images), and reset the cover/Keepsake — but keep the chapter itself, its
+ * Prologue text, and its Afterword questions. A heavy, confirmed action.
+ */
+export async function clearStory(storyId: string, slug: string): Promise<Result> {
+  return attempt(async () => {
+    await requireAuthor();
+    const db = supabaseAdmin();
+
+    await purgeStoryFrames(db, storyId);
+    await db.from('chapters').delete().eq('story_id', storyId);
+
+    const { data: qs } = await db.from('afterword_questions').select('id').eq('story_id', storyId);
+    const qids = (qs ?? []).map((q) => q.id as string);
+    if (qids.length > 0) await db.from('afterword_entries').delete().in('question_id', qids);
+
+    await db.storage.from(COVER_BUCKET).remove([`covers/${storyId}`]);
+    const { error } = await db
+      .from('stories')
+      .update({ cover_frame_id: null, keepsake_frame_id: null, cover_url: null })
+      .eq('id', storyId);
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath(`/story/${slug}`);
+    revalidatePath('/library');
+    return { ok: true, data: undefined };
+  });
+}
+
+/**
+ * Delete a Fleeting Frames entirely. Frame storage + cover object are removed
+ * first (rows would otherwise orphan objects), then the story row — its Moments,
+ * questions and answers cascade away with it.
+ */
+export async function deleteStory(storyId: string): Promise<Result> {
+  return attempt(async () => {
+    await requireAuthor();
+    const db = supabaseAdmin();
+
+    await purgeStoryFrames(db, storyId);
+    await db.storage.from(COVER_BUCKET).remove([`covers/${storyId}`]);
+
+    const { error } = await db.from('stories').delete().eq('id', storyId);
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath('/library');
+    return { ok: true, data: undefined };
+  });
+}
+
+/**
  * Remove the uploaded cover. Clears the column first (so the story stops
  * pointing at it), then the storage object — rows first, objects second, fail
  * toward invisible waste. With cover_url null, getCoverUrl falls back to the

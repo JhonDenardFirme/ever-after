@@ -29,7 +29,7 @@ import {
 } from '@/lib/queries';
 import { copy, AFTERWORD_SECTIONS } from '@/lib/copy';
 import { getSpotifyOEmbed } from '@/lib/spotify';
-import { BookIcon } from '@/components/ui/icons';
+import { BookIcon, SparkIcon } from '@/components/ui/icons';
 import CoverBanner from '@/components/prologue/CoverBanner';
 import PrologueSection from '@/components/prologue/PrologueSection';
 import Soundtrack from '@/components/soundtrack/Soundtrack';
@@ -76,11 +76,17 @@ export default async function StoryPage({ params }: { params: { slug: string } }
 
   // The closing one-word question, both answers, shown just above Develop.
   const wordQ = questions.find((q) => q.answer_kind === 'word');
-  const wordAnswers = wordQ
-    ? entries
-        .filter((e) => e.question_id === wordQ.id && e.answer_text && e.answer_text.trim())
-        .map((e) => ({ name: authors[e.author_id]?.name ?? '', word: e.answer_text as string }))
+  const wordPair = wordQ
+    ? Object.values(authors)
+        .sort((a, b) => (a.created_at < b.created_at ? -1 : 1))
+        .map((a) => {
+          const e = entries.find(
+            (x) => x.question_id === wordQ.id && x.author_id === a.id && x.answer_text && x.answer_text.trim()
+          );
+          return { name: a.name, word: e ? (e.answer_text as string) : null };
+        })
     : [];
+  const anyWord = wordPair.some((w) => w.word);
 
   // Per-author Keepsakes, from the Keepsake question's Frame answers.
   const me = await getCurrentAuthor();
@@ -156,21 +162,28 @@ export default async function StoryPage({ params }: { params: { slug: string } }
       {/* The answered reflections, as an auto-cycling story-style carousel. */}
       <ReflectionsCarousel reflections={reflections} />
 
-      {/* The one-word pair — the two answers together, just above the export. */}
-      {wordAnswers.length > 0 && (
+      {/* The one-word pair — both authors, side by side, just above the export. */}
+      {anyWord && (
         <section className="mx-auto max-w-2xl px-6 py-10 text-center">
-          <p className="mb-6 text-[10px] uppercase tracking-[0.3em] text-ember">
-            {copy.afterword.wordPairEyebrow}
-          </p>
-          <div className="flex flex-wrap items-start justify-center gap-12">
-            {wordAnswers.map((a, i) => (
-              <div key={i}>
-                <p className="bg-ever-gradient bg-clip-text font-serif text-4xl italic text-transparent sm:text-5xl">
-                  {a.word}
-                </p>
-                <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-ink-soft">— {a.name}</p>
+          <p className="mb-8 text-[10px] uppercase tracking-[0.3em] text-ember">{copy.afterword.wordPairEyebrow}</p>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-8">
+            {wordPair.slice(0, 2).map((a, i) => (
+              <div key={i} className={i === 1 ? 'order-3' : ''}>
+                {a.word ? (
+                  <p className="bg-ever-gradient bg-clip-text font-serif text-4xl italic text-transparent sm:text-5xl">
+                    {a.word}
+                  </p>
+                ) : (
+                  <p className="font-serif text-3xl italic text-ink-soft/40 sm:text-4xl">—</p>
+                )}
+                <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-ink-soft">{a.name}</p>
               </div>
             ))}
+            <div className="order-2 flex flex-col items-center gap-1 self-stretch">
+              <span className="w-px flex-1 bg-gradient-to-b from-transparent to-rule" />
+              <SparkIcon size={11} className="text-ember" />
+              <span className="w-px flex-1 bg-gradient-to-t from-transparent to-rule" />
+            </div>
           </div>
         </section>
       )}

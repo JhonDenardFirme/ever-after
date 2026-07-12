@@ -67,8 +67,10 @@ export async function ensureAfterwordBank(storyId: string): Promise<void> {
 export async function getStoryStats(sinceOverride: string | null): Promise<StoryStats> {
   const db = supabaseAdmin();
 
+  // "Chapters" on the Library means Fleeting Frames (stories) — the thing you
+  // "begin a new chapter" for — not the Moments inside one.
   const [chapters, frames, keepsakes] = await Promise.all([
-    db.from('chapters').select('id', { count: 'exact', head: true }),
+    db.from('stories').select('id', { count: 'exact', head: true }),
     db.from('frames').select('id', { count: 'exact', head: true }).eq('status', 'developed'),
     db.from('stories').select('id', { count: 'exact', head: true }).not('keepsake_frame_id', 'is', null),
   ]);

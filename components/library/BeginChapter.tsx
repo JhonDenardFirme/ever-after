@@ -55,7 +55,7 @@ export default function BeginChapter({ openUp = false }: { openUp?: boolean }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-full bg-violet px-5 py-3 text-sm tracking-wide text-paper shadow-glow-soft transition-colors hover:bg-violet-2"
+        className="flex items-center gap-2 rounded-full bg-ever-gradient px-5 py-3 text-sm tracking-wide text-paper shadow-glow-soft transition-opacity hover:opacity-90"
       >
         <span className="text-base leading-none">+</span>
         <span className="hidden sm:inline">{copy.library.begin}</span>
@@ -72,7 +72,7 @@ export default function BeginChapter({ openUp = false }: { openUp?: boolean }) {
           />
           <div
             className={`absolute z-50 w-72 rounded-2xl border border-rule bg-paper2 p-5 shadow-glow ${
-              openUp ? 'bottom-full left-1/2 mb-3 -translate-x-1/2' : 'right-0 mt-3'
+              openUp ? 'bottom-full left-1/2 mb-3 -translate-x-1/2' : 'right-0 top-full mt-3'
             }`}
           >
             <label htmlFor="story-title" className="mb-2 block text-center font-serif text-lg italic text-ink">
@@ -112,7 +112,7 @@ export default function BeginChapter({ openUp = false }: { openUp?: boolean }) {
                 type="button"
                 onClick={submit}
                 disabled={isPending || !title.trim()}
-                className="rounded-full bg-violet px-6 py-2.5 text-xs tracking-wide text-paper transition-colors hover:bg-violet-2 disabled:opacity-50"
+                className="rounded-full bg-ever-gradient px-6 py-2.5 text-xs tracking-wide text-paper shadow-glow-soft transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {isPending ? copy.prologue.saving : copy.library.beginConfirm}
               </button>

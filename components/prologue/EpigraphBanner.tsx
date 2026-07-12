@@ -29,7 +29,7 @@ export default function EpigraphBanner({
 
   useEffect(() => {
     if (reduced || photos.length < 2) return;
-    const t = setInterval(() => setIdx((i) => (i + 1) % photos.length), 6000);
+    const t = setInterval(() => setIdx((i) => (i + 1) % photos.length), 3000);
     return () => clearInterval(t);
   }, [reduced, photos.length]);
 
@@ -43,7 +43,7 @@ export default function EpigraphBanner({
             key={p}
             src={p}
             alt=""
-            className={`absolute inset-0 h-full w-full object-cover mix-blend-multiply transition-opacity duration-1000 ${i === idx ? 'opacity-60' : 'opacity-0'}`}
+            className={`ever-kenburns absolute inset-0 h-full w-full object-cover mix-blend-multiply transition-opacity duration-1000 ${i === idx ? 'opacity-60' : 'opacity-0'}`}
           />
         ))}
         <div className="absolute inset-0 bg-gradient-to-t from-violet-deep/75 via-transparent to-violet-deep/30" />

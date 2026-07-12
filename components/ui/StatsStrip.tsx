@@ -8,13 +8,14 @@
 // -----------------------------------------------------------------------------
 
 import { SparkIcon } from './icons';
+import CountingNumber from './CountingNumber';
 
 export default function StatsStrip({
   items,
   onDark = false,
   className = '',
 }: {
-  items: { label: string; value: string | number }[];
+  items: { label: string; value: string | number; from?: number }[];
   onDark?: boolean;
   className?: string;
 }) {
@@ -34,9 +35,11 @@ export default function StatsStrip({
               <span className={`w-px flex-1 bg-gradient-to-t from-transparent ${lineTo}`} />
             </div>
           )}
-          <div className="px-4 py-1 text-center sm:px-7">
+          <div className="w-[4.75rem] px-1 py-1 text-center sm:w-28">
             <p className={`text-[9px] uppercase tracking-[0.22em] ${labelTone} ${shadow}`}>{s.label}</p>
-            <p className={`mt-1 font-serif text-xl ${valueTone} ${shadow} sm:text-2xl`}>{s.value}</p>
+            <p className={`mt-1 font-serif text-xl ${valueTone} ${shadow} sm:text-2xl`}>
+              {typeof s.value === 'number' ? <CountingNumber number={s.value} fromNumber={s.from} /> : s.value}
+            </p>
           </div>
         </div>
       ))}

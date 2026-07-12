@@ -27,7 +27,7 @@ import QuestionCard from '@/components/afterword/QuestionCard';
 import AfterwordCarousel from '@/components/afterword/AfterwordCarousel';
 import SectionHeading from '@/components/ui/SectionHeading';
 import StarDivider from '@/components/ui/StarDivider';
-import StarField from '@/components/ui/StarField';
+import StarsBackground from '@/components/ui/StarsBackground';
 import BackLink from '@/components/ui/BackLink';
 import type { AfterwordQuestion } from '@/lib/types';
 
@@ -87,7 +87,7 @@ export default async function AfterwordPage({ params }: { params: { slug: string
           <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-multiply" />
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-violet-deep/80 via-violet-deep/20 to-violet-deep/45" />
-        <StarField />
+        <StarsBackground opacity={0.5} />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-paper to-transparent" />
         <div className="relative">
           <p className="mb-4 text-[11px] uppercase tracking-[0.3em] text-ember">{copy.afterword.eyebrow}</p>

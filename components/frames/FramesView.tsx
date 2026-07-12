@@ -122,7 +122,7 @@ export default function FramesView({
                     type="button"
                     onClick={open}
                     disabled={pending}
-                    className="rounded-full bg-violet px-5 py-2.5 text-xs tracking-wide text-paper transition-colors hover:bg-violet-2 disabled:opacity-60"
+                    className="rounded-full bg-ever-gradient px-5 py-2.5 text-xs tracking-wide text-paper shadow-glow-soft transition-opacity hover:opacity-90 disabled:opacity-60"
                   >
                     {pending ? (label ?? copy.frames.developing) : copy.frames.develop}
                   </button>

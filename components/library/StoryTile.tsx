@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { shelfLift, useEverMotion } from '@/lib/motion';
 import { copy } from '@/lib/copy';
+import { SparkIcon } from '@/components/ui/icons';
 import type { Story } from '@/lib/types';
 
 function years(story: Story): string | null {
@@ -40,8 +41,13 @@ export default function StoryTile({ story, coverUrl }: { story: Story; coverUrl:
             // eslint-disable-next-line @next/next/no-img-element
             <img src={coverUrl} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full items-end p-5">
-              <span className="font-serif text-xl italic leading-tight text-paper/85">
+            // Empty cover — a piece of frosted glass over the violet field.
+            <div className="relative flex h-full items-end p-5">
+              <div className="pointer-events-none absolute inset-0 bg-white/[0.06]" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/25 to-transparent opacity-50" />
+              <div className="pointer-events-none absolute inset-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),inset_0_0_0_1px_rgba(255,255,255,0.06)]" />
+              <SparkIcon size={12} className="absolute right-4 top-4 text-white/50" />
+              <span className="relative font-serif text-xl italic leading-tight text-paper/85">
                 {story.theme ?? ''}
               </span>
             </div>

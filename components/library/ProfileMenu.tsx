@@ -16,6 +16,7 @@ import { useState, useRef, useEffect } from 'react';
 import imageCompression from 'browser-image-compression';
 import { uploadAvatar } from '@/app/actions/couple';
 import { copy } from '@/lib/copy';
+import GlassPanel, { glassItem } from '@/components/ui/GlassPanel';
 
 const COMPRESSION = { maxSizeMB: 0.5, maxWidthOrHeight: 512, useWebWorker: true };
 
@@ -76,44 +77,42 @@ export default function ProfileMenu({
 
   return (
     <div className="relative">
+      {/* crystal-ringed avatar */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={copy.nav.profileEyebrow}
-        className="h-11 w-11 overflow-hidden rounded-full border border-rule bg-violet-deep text-paper transition-shadow hover:shadow-glow-soft focus-visible:shadow-glow-soft"
+        className="relative z-50 rounded-full bg-gradient-to-br from-white/60 to-white/5 p-[2px] transition-transform hover:-translate-y-[1px]"
       >
-        {avatar ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={avatar} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <span className="flex h-full w-full items-center justify-center text-sm tracking-wide text-violet-3">
-            {initials}
-          </span>
-        )}
+        <span className="block h-10 w-10 overflow-hidden rounded-full bg-violet-deep text-paper">
+          {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-sm tracking-wide text-violet-3">
+              {initials}
+            </span>
+          )}
+        </span>
       </button>
 
       {open && (
         <>
-          {/* click-away backdrop */}
+          {/* click-away backdrop — a light blur so the menu reads as a modal */}
           <button
             type="button"
             aria-hidden="true"
             tabIndex={-1}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-40 cursor-default"
+            className="fixed inset-0 z-40 cursor-default bg-violet-deep/10 backdrop-blur-sm"
           />
-          <div
-            role="menu"
-            className="absolute right-0 z-50 mt-3 w-64 overflow-hidden rounded-2xl border border-white/15 bg-violet-deep/75 text-paper shadow-glow backdrop-blur-xl"
-          >
-            <div className="border-b border-white/10 px-5 py-4">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-violet-3">
-                {copy.nav.profileEyebrow}
-              </p>
-              <p className="mt-1 truncate font-serif text-lg text-paper">{name}</p>
-              <p className="truncate text-xs text-violet-3">{email}</p>
+          <GlassPanel className="absolute right-0 top-full z-50 mt-2 w-64">
+            <div className="border-b border-white/15 px-5 py-4">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">{copy.nav.profileEyebrow}</p>
+              <p className="mt-1 truncate font-serif text-lg text-white/90">{name}</p>
+              <p className="truncate text-xs text-white/60">{email}</p>
             </div>
 
             <div className="p-2">
@@ -128,39 +127,21 @@ export default function ProfileMenu({
                   if (f) pickAvatar(f);
                 }}
               />
-              <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                disabled={pending}
-                className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-paper/90 transition-colors hover:bg-white/10 disabled:opacity-60"
-              >
+              <button type="button" onClick={() => inputRef.current?.click()} disabled={pending} className={`${glassItem} disabled:opacity-60`}>
                 {pending ? copy.nav.profileUploading : copy.nav.editProfile}
               </button>
-
-              <a
-                href="#shelf"
-                onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-2.5 text-left text-sm text-paper/90 transition-colors hover:bg-white/10"
-              >
+              <a href="#shelf" onClick={() => setOpen(false)} className={glassItem}>
                 {copy.nav.jumpToShelf}
               </a>
-
               <form action={signOutAction}>
-                <button
-                  type="submit"
-                  className="block w-full rounded-lg px-3 py-2.5 text-left text-sm text-violet-3 transition-colors hover:bg-white/10 hover:text-ember"
-                >
+                <button type="submit" className={`${glassItem} text-white/60 hover:text-ember`}>
                   {copy.nav.signOut}
                 </button>
               </form>
             </div>
 
-            {error && (
-              <p role="alert" className="border-t border-white/10 px-5 py-2 text-xs text-ember">
-                {error}
-              </p>
-            )}
-          </div>
+            {error && <p role="alert" className="border-t border-white/15 px-5 py-2 text-xs text-ember">{error}</p>}
+          </GlassPanel>
         </>
       )}
     </div>

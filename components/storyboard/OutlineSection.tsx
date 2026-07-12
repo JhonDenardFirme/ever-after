@@ -80,7 +80,7 @@ export default function OutlineSection({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="rounded-full bg-violet px-6 py-3 text-sm tracking-wide text-paper shadow-glow-soft transition-colors hover:bg-violet-2"
+            className="rounded-full bg-ever-gradient px-6 py-3 text-sm tracking-wide text-paper shadow-glow-soft transition-opacity hover:opacity-90"
           >
             {copy.storyboard.addBeat}
           </button>

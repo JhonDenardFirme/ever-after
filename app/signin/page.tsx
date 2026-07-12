@@ -18,6 +18,7 @@
 
 import { signIn } from '@/lib/auth';
 import { copy } from '@/lib/copy';
+import { GoogleIcon } from '@/components/ui/icons';
 
 export default function SignInPage({
   searchParams,
@@ -58,8 +59,11 @@ export default function SignInPage({
           >
             <button
               type="submit"
-              className="w-full rounded-full bg-violet px-6 py-3.5 text-sm tracking-wide text-paper transition-colors hover:bg-violet-2"
+              className="flex w-full items-center justify-center gap-2.5 rounded-full bg-ever-gradient px-6 py-3.5 text-sm tracking-wide text-paper shadow-glow-soft transition-opacity hover:opacity-90"
             >
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white">
+                <GoogleIcon size={13} />
+              </span>
               {copy.signin.google}
             </button>
           </form>

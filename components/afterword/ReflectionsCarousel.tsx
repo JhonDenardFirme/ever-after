@@ -15,8 +15,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { copy } from '@/lib/copy';
 import { glowGradient } from '@/lib/gradients';
 import StarDivider from '@/components/ui/StarDivider';
+import StarField from '@/components/ui/StarField';
 import SectionHeading from '@/components/ui/SectionHeading';
-import { ArrowLeftIcon } from '@/components/ui/icons';
+import { ArrowLeftIcon, SparkIcon } from '@/components/ui/icons';
 
 export type Reflection = {
   id: string;
@@ -33,7 +34,7 @@ function Answers({ reflection, tall = false }: { reflection: Reflection; tall?: 
       {reflection.answers.slice(0, 2).map((a, i) => (
         <div key={i} className={i === 1 ? 'border-t border-white/15 pt-4 sm:border-t-0 sm:pt-0' : ''}>
           <p className="mb-1.5 text-[10px] uppercase tracking-[0.2em] text-violet-3">{a.name}</p>
-          <p className={`overflow-y-auto font-serif leading-snug text-paper/90 ${tall ? 'max-h-56 text-lg' : 'max-h-32 text-base'} ${a.text ? '' : 'italic text-violet-3/60'}`}>
+          <p className={`font-serif leading-relaxed text-paper/90 ${tall ? 'line-clamp-[12] text-lg' : 'line-clamp-4 text-base'} ${a.text ? '' : 'italic text-violet-3/60'}`}>
             {a.text || copy.afterword.unanswered}
           </p>
         </div>
@@ -50,21 +51,24 @@ function Card({ reflection, index, tall = false }: { reflection: Reflection; ind
       className={`relative flex flex-col justify-center overflow-hidden rounded-3xl p-6 text-center text-paper shadow-glow ring-1 ring-inset ring-white/10 sm:p-8 ${tall ? 'min-h-[68vh]' : 'min-h-[340px]'}`}
       style={{ backgroundImage: glowGradient(index) }}
     >
-      <p className="mb-3 text-[10px] uppercase tracking-[0.28em] text-ember">
-        {reflection.section || copy.afterword.reflectionEyebrow}
-      </p>
-      <p className="mx-auto max-w-lg font-serif text-xl italic leading-snug text-paper sm:text-2xl">
-        {reflection.question}
-      </p>
-      <StarDivider onDark className="mx-auto my-6 max-w-[10rem]" />
-      <div className="relative">
-        {/* the star divider between the two answer columns */}
-        <div className="absolute inset-y-0 left-1/2 hidden -translate-x-1/2 flex-col items-center justify-center gap-1 sm:flex" aria-hidden="true">
-          <span className="w-px flex-1 bg-gradient-to-b from-transparent to-white/25" />
-          <span className="h-1.5 w-1.5 rotate-45 bg-ember" />
-          <span className="w-px flex-1 bg-gradient-to-t from-transparent to-white/25" />
+      <StarField className="opacity-40" />
+      <div className="relative z-10 w-full">
+        <p className="mb-3 text-[10px] uppercase tracking-[0.28em] text-ember">
+          {reflection.section || copy.afterword.reflectionEyebrow}
+        </p>
+        <p className="mx-auto max-w-lg font-serif text-xl italic leading-snug text-paper sm:text-2xl">
+          {reflection.question}
+        </p>
+        <StarDivider onDark className="mx-auto my-6 max-w-[10rem]" />
+        <div className="relative">
+          {/* the star divider between the two answer columns */}
+          <div className="absolute inset-y-0 left-1/2 hidden -translate-x-1/2 flex-col items-center justify-center gap-1 sm:flex" aria-hidden="true">
+            <span className="w-px flex-1 bg-gradient-to-b from-transparent to-white/25" />
+            <SparkIcon size={12} className="text-ember" />
+            <span className="w-px flex-1 bg-gradient-to-t from-transparent to-white/25" />
+          </div>
+          <Answers reflection={reflection} tall={tall} />
         </div>
-        <Answers reflection={reflection} tall={tall} />
       </div>
     </div>
   );
@@ -124,7 +128,6 @@ export default function ReflectionsCarousel({ reflections }: { reflections: Refl
   return (
     <section className="mx-auto max-w-5xl px-6 py-14">
       <SectionHeading
-        align="center"
         eyebrow={copy.afterword.eyebrow}
         title={copy.afterword.reflectionsTitle}
         tagline={copy.afterword.reflectionsTagline}

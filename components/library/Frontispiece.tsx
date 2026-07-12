@@ -297,7 +297,8 @@ export default function Frontispiece({
   }
 
   const statItems = [
-    { label: copy.frontispiece.stats.since, value: stats.sinceYear ?? '—' },
+    // The year counts DOWN from the present to its origin, not up from 0.
+    { label: copy.frontispiece.stats.since, value: stats.sinceYear ?? '—', from: new Date().getFullYear() },
     { label: copy.frontispiece.stats.chapters, value: stats.chapters },
     { label: copy.frontispiece.stats.frames, value: stats.frames },
     { label: copy.frontispiece.stats.keepsakes, value: stats.keepsakes },

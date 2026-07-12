@@ -14,7 +14,7 @@ import { orderBeats, formatBeatTime } from '@/lib/beats';
 import { glowGradient } from '@/lib/gradients';
 import { copy } from '@/lib/copy';
 import { ArrowLeftIcon } from '@/components/ui/icons';
-import StarField from '@/components/ui/StarField';
+import StarsBackground from '@/components/ui/StarsBackground';
 import StarDivider from '@/components/ui/StarDivider';
 import BeatIcon from '@/components/storyboard/BeatIcon';
 
@@ -36,7 +36,7 @@ export default async function InvitationPage({ params }: { params: { slug: strin
           <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-45 mix-blend-multiply" />
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-violet-deep/80 via-transparent to-violet-deep/40" />
-        <StarField />
+        <StarsBackground opacity={0.5} />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-paper to-transparent" />
 
         <div className="relative">
