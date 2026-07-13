@@ -73,7 +73,14 @@ export default function PhotoFeed({
 
   const developed = frames.filter((f) => f.status === 'developed' && f.media_url);
   const waiting = frames.filter((f) => f.status === 'waiting');
-  const hasAny = developed.length + waiting.length > 0;
+
+  // Uploading to a set (or the general feed) should FILL a matching unfilled
+  // Waiting Frame instead of dropping a new photo beside it — otherwise the old
+  // placeholder lingers as a ghost next to its own picture. The first file
+  // fills that placeholder; extra files join the set. A null label means the
+  // unlabeled / uncategorized area.
+  const firstWaitingId = (label: string | null): string | undefined =>
+    waiting.find((f) => (f.prompt_text?.trim() || null) === label)?.id;
 
   // New Frames attach to the last Moment of the day (see header note).
   const ordered = orderBeats(chapters);
@@ -195,6 +202,7 @@ export default function PhotoFeed({
     <UploadFrame
       slug={slug}
       chapterId={lastChapter.id}
+      frameId={firstWaitingId(null)}
       render={({ pending, label, open: openPicker }) => (
         <button
           type="button"
@@ -224,13 +232,17 @@ export default function PhotoFeed({
         action={headerAction}
       />
 
-      {!hasAny ? (
-        <p className="rounded-2xl border border-dashed border-rule-strong bg-paper2/40 py-20 text-center font-serif text-xl italic text-ink-soft">
-          {copy.frames.emptyStory}
-        </p>
-      ) : (
-        <div className="space-y-14">
-          {groups.map((group, gi) => (
+      <div className="space-y-14">
+        {/* The uncategorized folder's opening state — sits on top of the
+            Waiting Frames and bows out the moment the first photo is developed
+            anywhere in the story. "Every story begins with a single Frame." */}
+        {developed.length === 0 && (
+          <p className="rounded-2xl border border-dashed border-rule-strong bg-paper2/40 py-20 text-center font-serif text-xl italic text-ink-soft">
+            {copy.frames.emptyStory}
+          </p>
+        )}
+
+        {groups.map((group, gi) => (
             <div key={group.label ?? `__unlabeled-${gi}`}>
               {/* A labeled set gets a header + its own upload button. The
                   unlabeled group renders with neither. */}
@@ -243,6 +255,7 @@ export default function PhotoFeed({
                       slug={slug}
                       chapterId={lastChapter.id}
                       promptText={group.label}
+                      frameId={firstWaitingId(group.label)}
                       render={({ pending, label, open: openPicker }) => (
                         <button
                           type="button"
@@ -269,8 +282,7 @@ export default function PhotoFeed({
               </div>
             </div>
           ))}
-        </div>
-      )}
+      </div>
 
       {open && (
         <PhotoLightbox
