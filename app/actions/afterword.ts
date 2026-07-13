@@ -131,6 +131,28 @@ export async function answerQuestion(
   });
 }
 
+/**
+ * Clear the Afterword — erase every answer (both authors) and reset the
+ * Keepsake choice, keeping the questions themselves. A confirmed, heavy action.
+ */
+export async function clearAfterword(storyId: string, slug: string): Promise<Result> {
+  return attempt(async () => {
+    await requireAuthor();
+    const db = supabaseAdmin();
+
+    const { data: qs } = await db.from('afterword_questions').select('id').eq('story_id', storyId);
+    const ids = (qs ?? []).map((q) => q.id as string);
+    if (ids.length > 0) {
+      const { error } = await db.from('afterword_entries').delete().in('question_id', ids);
+      if (error) return { ok: false, error: error.message };
+    }
+    await db.from('stories').update({ keepsake_frame_id: null }).eq('id', storyId);
+
+    refresh(slug);
+    return { ok: true, data: undefined };
+  });
+}
+
 /** Find the story's Keepsake question (the new sectioned one preferred). */
 async function keepsakeQuestionId(db: ReturnType<typeof supabaseAdmin>, storyId: string): Promise<string | null> {
   const { data } = await db

@@ -84,9 +84,9 @@ export default function ProfileMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={copy.nav.profileEyebrow}
-        className="relative z-50 rounded-full bg-gradient-to-br from-white/60 to-white/5 p-[2px] transition-transform hover:-translate-y-[1px]"
+        className="relative z-50 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-white/60 to-white/5 p-[2px] transition-transform hover:-translate-y-[1px]"
       >
-        <span className="block h-10 w-10 overflow-hidden rounded-full bg-violet-deep text-paper">
+        <span className="block h-full w-full overflow-hidden rounded-full bg-violet-deep text-paper">
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={avatar} alt="" className="h-full w-full object-cover" />

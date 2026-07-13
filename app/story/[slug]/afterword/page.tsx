@@ -23,8 +23,10 @@ import {
   ensureAfterwordBank,
 } from '@/lib/queries';
 import { copy, AFTERWORD_SECTIONS } from '@/lib/copy';
+import { glowGradient } from '@/lib/gradients';
 import QuestionCard from '@/components/afterword/QuestionCard';
 import AfterwordCarousel from '@/components/afterword/AfterwordCarousel';
+import AfterwordClear from '@/components/afterword/AfterwordClear';
 import SectionHeading from '@/components/ui/SectionHeading';
 import StarDivider from '@/components/ui/StarDivider';
 import StarsBackground from '@/components/ui/StarsBackground';
@@ -81,7 +83,7 @@ export default async function AfterwordPage({ params }: { params: { slug: string
     <main className="min-h-dvh">
       {/* Hero — thinner than the album cover (this is an inside page), and it
           dissolves into the paper at the base, same as the Fleeting Frames cover. */}
-      <div className="relative flex min-h-[32vh] items-center justify-center overflow-hidden bg-violet-hero px-6 text-center sm:min-h-[38vh]">
+      <div className="relative flex min-h-[32vh] items-center justify-center overflow-hidden px-6 text-center sm:min-h-[38vh]" style={{ backgroundImage: glowGradient(1) }}>
         {coverUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={coverUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40 mix-blend-multiply" />
@@ -125,7 +127,8 @@ export default async function AfterwordPage({ params }: { params: { slug: string
           </div>
         )}
 
-        <div className="mt-8 border-t border-rule pt-10 text-center">
+        <div className="mt-8 flex flex-col items-center gap-6 border-t border-rule pt-10 text-center">
+          <AfterwordClear storyId={story.id} slug={story.slug} />
           <BackLink href={`/story/${story.slug}`} label={story.title} className="justify-center" />
         </div>
       </section>

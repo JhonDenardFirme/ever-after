@@ -17,6 +17,7 @@ import { useState, useTransition, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createStory } from '@/app/actions/stories';
 import { copy } from '@/lib/copy';
+import GlassPanel from '@/components/ui/GlassPanel';
 
 export default function BeginChapter({ openUp = false }: { openUp?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -68,14 +69,14 @@ export default function BeginChapter({ openUp = false }: { openUp?: boolean }) {
             aria-hidden="true"
             tabIndex={-1}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-40 cursor-default"
+            className="fixed inset-0 z-40 cursor-default bg-violet-deep/10 backdrop-blur-sm"
           />
-          <div
-            className={`absolute z-50 w-72 rounded-2xl border border-rule bg-paper2 p-5 shadow-glow ${
+          <GlassPanel
+            className={`absolute z-50 w-72 p-5 ${
               openUp ? 'bottom-full left-1/2 mb-3 -translate-x-1/2' : 'right-0 top-full mt-3'
             }`}
           >
-            <label htmlFor="story-title" className="mb-2 block text-center font-serif text-lg italic text-ink">
+            <label htmlFor="story-title" className="mb-2 block text-center font-serif text-lg italic text-white/90">
               {copy.library.beginPrompt}
             </label>
 
@@ -90,7 +91,7 @@ export default function BeginChapter({ openUp = false }: { openUp?: boolean }) {
                 if (e.key === 'Enter') submit();
                 if (e.key === 'Escape') setOpen(false);
               }}
-              className="mb-3 w-full rounded-lg border border-rule bg-paper px-4 py-3 text-center font-serif text-lg text-ink outline-none placeholder:text-ink-soft/50 focus:border-violet-2 disabled:opacity-60"
+              className="mb-3 w-full rounded-lg border border-white/15 bg-white/10 px-4 py-3 text-center font-serif text-lg text-paper outline-none placeholder:text-white/40 focus:border-violet-3 disabled:opacity-60"
             />
 
             {error && (
@@ -104,7 +105,7 @@ export default function BeginChapter({ openUp = false }: { openUp?: boolean }) {
                 type="button"
                 onClick={() => setOpen(false)}
                 disabled={isPending}
-                className="rounded-full border border-rule px-5 py-2.5 text-xs tracking-wide text-ink-soft transition-colors hover:border-violet-2 hover:text-violet"
+                className="rounded-full border border-white/20 px-5 py-2.5 text-xs tracking-wide text-white/80 transition-colors hover:text-white"
               >
                 {copy.library.beginCancel}
               </button>
@@ -117,7 +118,7 @@ export default function BeginChapter({ openUp = false }: { openUp?: boolean }) {
                 {isPending ? copy.prologue.saving : copy.library.beginConfirm}
               </button>
             </div>
-          </div>
+          </GlassPanel>
         </>
       )}
     </div>

@@ -332,6 +332,12 @@ export const copy = {
     keepsakeUploading: 'Keeping…',
     keepsakeCaption: 'This becomes The Keepsake — the defining image of the chapter.',
     // 1.2 — album interleave + word pair
+    // Clearing the Afterword (answers + Keepsake choice)
+    clear: 'Clear the Afterword',
+    clearConfirm: 'This erases every answer — both of yours — and the Keepsake choice. The questions stay. Are you sure?',
+    clearing: 'Clearing…',
+    clearYes: 'Yes, clear it',
+    clearNo: 'Not yet',
     reflectionEyebrow: 'A reflection',
     reflectionsTitle: 'Between the photos.',
     reflectionsTagline: 'What we wrote to each other, looking back.',

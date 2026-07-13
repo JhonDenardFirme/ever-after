@@ -27,7 +27,9 @@ type Menu = 'cover' | 'story' | null;
 type Confirm = 'clear' | 'delete' | null;
 
 const triggerClass =
-  'relative z-10 flex items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.08] px-4 py-2 text-[11px] tracking-wide text-paper/90 backdrop-blur-xl transition-all duration-300 hover:-translate-y-[1px] hover:border-white/30 hover:bg-white/[0.14] disabled:opacity-60';
+  'relative z-10 flex h-9 items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.08] px-4 text-[11px] tracking-wide text-paper/90 backdrop-blur-xl transition-all duration-300 hover:-translate-y-[1px] hover:border-white/30 hover:bg-white/[0.14] disabled:opacity-60';
+const dotsClass =
+  'relative z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/[0.08] text-paper backdrop-blur-xl transition-all duration-300 hover:-translate-y-[1px] hover:border-white/30 hover:bg-white/[0.14]';
 
 export default function CoverControls({
   storyId,
@@ -135,7 +137,7 @@ export default function CoverControls({
         {coverPending ? copy.prologue.coverUploading : copy.prologue.editCover}
       </button>
 
-      <button type="button" onClick={() => openMenu('story')} aria-haspopup="menu" aria-expanded={menu === 'story'} aria-label={copy.storyMenu.more} className={`${triggerClass} h-9 w-9 justify-center px-0`}>
+      <button type="button" onClick={() => openMenu('story')} aria-haspopup="menu" aria-expanded={menu === 'story'} aria-label={copy.storyMenu.more} className={dotsClass}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
           <circle cx="5" cy="12" r="1.6" />
           <circle cx="12" cy="12" r="1.6" />

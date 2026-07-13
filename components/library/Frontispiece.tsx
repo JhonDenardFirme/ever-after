@@ -297,8 +297,8 @@ export default function Frontispiece({
   }
 
   const statItems = [
-    // The year counts DOWN from the present to its origin, not up from 0.
-    { label: copy.frontispiece.stats.since, value: stats.sinceYear ?? '—', from: new Date().getFullYear() },
+    // The year counts UP from a round 2000 to its origin — nicer to watch.
+    { label: copy.frontispiece.stats.since, value: stats.sinceYear ?? '—', from: 2000 },
     { label: copy.frontispiece.stats.chapters, value: stats.chapters },
     { label: copy.frontispiece.stats.frames, value: stats.frames },
     { label: copy.frontispiece.stats.keepsakes, value: stats.keepsakes },
@@ -345,25 +345,28 @@ export default function Frontispiece({
         transition={reduced ? undefined : { duration: 18, repeat: Infinity, ease: 'easeInOut' }}
       />
 
-      {/* ---- Top bar: brand + edit + profile ---- */}
-      <div className="absolute inset-x-0 top-0 z-30 flex items-center justify-between px-6 py-5">
-        <span className={`text-sm uppercase tracking-[0.32em] text-paper/90 ${TEXT_SHADOW}`}>{brand}</span>
-        <div className="flex items-center gap-2">
-          {!editing && (
-            <button
-              type="button"
-              onClick={openEdit}
-              className="flex items-center gap-1.5 rounded-full border border-white/25 bg-violet-deep/40 px-4 py-2 text-[11px] tracking-wide text-paper/90 backdrop-blur-sm transition-colors hover:border-white/50 hover:text-paper"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
-              </svg>
-              {copy.frontispiece.edit}
-            </button>
-          )}
-          {profileSlot}
-        </div>
+      {/* blur the hero behind the settings form while editing */}
+      {editing && <div className="pointer-events-none absolute inset-0 z-[5] bg-violet-deep/25 backdrop-blur-md" />}
+
+      {/* ---- Top bar: brand (left) and the edit + profile cluster (right) are
+          independently anchored, so opening the profile menu can never nudge the
+          "Ever After" mark — exactly like the album's cover controls. ---- */}
+      <span className={`absolute left-6 top-6 z-30 text-sm uppercase tracking-[0.32em] text-paper/90 ${TEXT_SHADOW}`}>{brand}</span>
+      <div className="absolute right-6 top-6 z-30 flex items-center gap-2">
+        {!editing && (
+          <button
+            type="button"
+            onClick={openEdit}
+            className="relative z-10 flex h-10 items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.08] px-4 text-[11px] tracking-wide text-paper/90 backdrop-blur-xl transition-all duration-300 hover:-translate-y-[1px] hover:border-white/30 hover:bg-white/[0.14]"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+            </svg>
+            {copy.frontispiece.edit}
+          </button>
+        )}
+        {profileSlot}
       </div>
 
       {/* ---- Centre content ---- */}

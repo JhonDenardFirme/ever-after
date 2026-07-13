@@ -42,6 +42,31 @@ body::before {
 }
 
 /* ---------------------------------------------------------------------------
+   Scrollbars — thin, rounded, violet, so the default grey bar doesn't intrude
+   on the editorial surfaces. Firefox uses scrollbar-color; WebKit the pseudos.
+--------------------------------------------------------------------------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #8b5ad0 transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  background-color: #6c2bd9;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #5115ab;
+}
+
+/* ---------------------------------------------------------------------------
    The Story Frontispiece (1.2). A slow "Ken Burns" drift on the hero photo so
    the opening spread feels alive, and a soft pulse on the divider star. Both
    go still under reduced motion.

@@ -19,44 +19,80 @@ import { DEFAULT_AFTERWORD_QUESTIONS } from '@/lib/copy';
 import type { Story, Chapter, Frame, Author, AfterwordQuestion, AfterwordEntry, Couple, StoryStats } from '@/lib/types';
 
 /**
- * 1.2: make sure a story has the four-section question bank. New stories are
- * seeded at creation; this idempotently backfills stories created before the
- * rebuild, WITHOUT touching their old questions or answers. Safe to call on
- * every Afterword/album render — it writes at most once per story.
+ * 1.2: make sure a story has exactly the four-section question bank — no
+ * duplicates. Idempotent and self-healing: it first DEDUPES (one Keepsake, one
+ * one-word, unique text — this repairs stories that got the bank inserted twice,
+ * or old + new banks), then backfills any missing default questions. Answers on
+ * a kept question survive (same row); a deleted duplicate takes its own answers
+ * with it. Safe to call on every render.
  */
 export async function ensureAfterwordBank(storyId: string): Promise<void> {
   const db = supabaseAdmin();
 
-  const { data: existing } = await db
+  const { data } = await db
     .from('afterword_questions')
-    .select('id, sort_order')
+    .select('id, question, section, answer_kind, sort_order')
     .eq('story_id', storyId)
-    .not('section', 'is', null)
-    .limit(1);
+    .order('sort_order', { ascending: true });
 
-  if (existing && existing.length > 0) return; // already has the sectioned bank
+  type Row = { id: string; question: string; section: string | null; answer_kind: string; sort_order: number };
+  const rows = (data ?? []) as Row[];
+  const norm = (q: string) => q.trim().toLowerCase();
 
-  // Append after whatever sort_order the old questions used.
-  const { data: last } = await db
-    .from('afterword_questions')
-    .select('sort_order')
-    .eq('story_id', storyId)
-    .order('sort_order', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // --- 1. Dedup. Keep one Keepsake, one one-word, and one of each text. ---
+  const seen = new Set<string>();
+  const toDelete: string[] = [];
+  const kept: Row[] = [];
+  for (const r of rows) {
+    const key = r.answer_kind === 'frame' ? '__frame' : r.answer_kind === 'word' ? '__word' : norm(r.question);
+    if (seen.has(key)) toDelete.push(r.id);
+    else {
+      seen.add(key);
+      kept.push(r);
+    }
+  }
+  if (toDelete.length > 0) {
+    const { error } = await db.from('afterword_questions').delete().in('id', toDelete);
+    if (error) console.error('[ensureAfterwordBank] dedup:', error.message);
+  }
 
-  const base = ((last?.sort_order as number | undefined) ?? 0) + 1;
+  // --- 2. Backfill / canonicalise against the default bank. ---
+  const byText = new Map(kept.filter((r) => r.answer_kind !== 'frame' && r.answer_kind !== 'word').map((r) => [norm(r.question), r]));
+  const keptFrame = kept.find((r) => r.answer_kind === 'frame') ?? null;
+  const keptWord = kept.find((r) => r.answer_kind === 'word') ?? null;
+  let nextOrder = kept.reduce((m, r) => Math.max(m, r.sort_order), 0) + 1;
+  const toInsert: { story_id: string; question: string; section: string; answer_kind: string; sort_order: number }[] = [];
 
-  const { error } = await db.from('afterword_questions').insert(
-    DEFAULT_AFTERWORD_QUESTIONS.map((q, i) => ({
-      story_id: storyId,
-      question: q.question,
-      section: q.section,
-      answer_kind: q.answer_kind,
-      sort_order: base + i,
-    }))
-  );
-  if (error) console.error('[queries] ensureAfterwordBank:', error.message);
+  for (const q of DEFAULT_AFTERWORD_QUESTIONS) {
+    if (q.answer_kind === 'frame') {
+      if (keptFrame) {
+        if (keptFrame.section !== q.section || keptFrame.question !== q.question)
+          await db.from('afterword_questions').update({ section: q.section, question: q.question }).eq('id', keptFrame.id);
+      } else {
+        toInsert.push({ story_id: storyId, ...q, sort_order: nextOrder++ });
+      }
+    } else if (q.answer_kind === 'word') {
+      if (keptWord) {
+        if (keptWord.section !== q.section || keptWord.question !== q.question)
+          await db.from('afterword_questions').update({ section: q.section, question: q.question }).eq('id', keptWord.id);
+      } else {
+        toInsert.push({ story_id: storyId, ...q, sort_order: nextOrder++ });
+      }
+    } else {
+      const found = byText.get(norm(q.question));
+      if (found) {
+        if (found.section !== q.section)
+          await db.from('afterword_questions').update({ section: q.section }).eq('id', found.id);
+      } else {
+        toInsert.push({ story_id: storyId, ...q, sort_order: nextOrder++ });
+      }
+    }
+  }
+
+  if (toInsert.length > 0) {
+    const { error } = await db.from('afterword_questions').insert(toInsert);
+    if (error) console.error('[ensureAfterwordBank] backfill:', error.message);
+  }
 }
 
 /**
