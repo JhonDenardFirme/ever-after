@@ -72,33 +72,34 @@ export default function PhotoFeed({
   const [openId, setOpenId] = useState<string | null>(null);
 
   const developed = frames.filter((f) => f.status === 'developed' && f.media_url);
+  const waiting = frames.filter((f) => f.status === 'waiting');
+  const hasAny = developed.length + waiting.length > 0;
 
   // New Frames attach to the last Moment of the day (see header note).
   const ordered = orderBeats(chapters);
   const lastChapter = ordered[ordered.length - 1] ?? null;
 
-  // Group by prompt_text. Labeled sets first (in first-appearance order); the
-  // unlabeled group always sorts last.
+  // Group by prompt_text (the set). Developed Frames come first within a set,
+  // then its Waiting Frames as empty placeholders — a set can be all-waiting
+  // (a planned sub-album not shot yet). Unlabeled Frames land last, no header.
   const groups: Group[] = [];
   const indexByLabel = new Map<string, number>();
-  let unlabeled: Frame[] | null = null;
-
-  for (const f of developed) {
-    const label = f.prompt_text?.trim() || null;
-    if (label === null) {
-      if (!unlabeled) unlabeled = [];
-      unlabeled.push(f);
-      continue;
-    }
+  const unlabeled: Frame[] = [];
+  const groupFor = (label: string): Group => {
     let gi = indexByLabel.get(label);
     if (gi === undefined) {
       gi = groups.length;
       indexByLabel.set(label, gi);
       groups.push({ label, frames: [] });
     }
-    groups[gi].frames.push(f);
+    return groups[gi];
+  };
+  for (const f of [...developed, ...waiting]) {
+    const label = f.prompt_text?.trim() || null;
+    if (label === null) unlabeled.push(f);
+    else groupFor(label).frames.push(f);
   }
-  if (unlabeled && unlabeled.length > 0) groups.push({ label: null, frames: unlabeled });
+  if (unlabeled.length > 0) groups.push({ label: null, frames: unlabeled });
 
   const open = openId ? developed.find((f) => f.id === openId) ?? null : null;
 
@@ -154,6 +155,42 @@ export default function PhotoFeed({
     );
   }
 
+  // A Waiting Frame, sitting in the feed as a dashed empty placeholder — click
+  // to develop it into the photograph it was asking for.
+  function WaitingTile({ frame }: { frame: Frame }) {
+    const author = frame.authored_by ? authors[frame.authored_by] : undefined;
+    return (
+      <div className="mb-4 break-inside-avoid">
+        <UploadFrame
+          slug={slug}
+          chapterId={frame.chapter_id ?? lastChapter?.id ?? ''}
+          frameId={frame.id}
+          promptText={frame.prompt_text ?? undefined}
+          render={({ pending, label, open: openPicker }) => (
+            <button
+              type="button"
+              onClick={openPicker}
+              disabled={pending}
+              className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2.5 rounded-2xl border-[1.5px] border-dashed border-rule-strong bg-paper2/50 p-4 text-center transition-colors hover:border-violet-2 disabled:opacity-60"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-dashed border-rule-strong text-violet/70">
+                <PlusIcon size={16} />
+              </span>
+              <p className="font-serif text-sm leading-snug text-ink">
+                {pending ? label ?? copy.frames.developing : frame.prompt_text}
+              </p>
+              {author && !pending && (
+                <p className="text-[9px] uppercase tracking-[0.14em] text-ink-soft">
+                  {copy.frames.waitingFor(author.name)}
+                </p>
+              )}
+            </button>
+          )}
+        />
+      </div>
+    );
+  }
+
   const headerAction = lastChapter ? (
     <UploadFrame
       slug={slug}
@@ -187,7 +224,7 @@ export default function PhotoFeed({
         action={headerAction}
       />
 
-      {developed.length === 0 ? (
+      {!hasAny ? (
         <p className="rounded-2xl border border-dashed border-rule-strong bg-paper2/40 py-20 text-center font-serif text-xl italic text-ink-soft">
           {copy.frames.emptyStory}
         </p>
@@ -222,9 +259,13 @@ export default function PhotoFeed({
               )}
 
               <div className="columns-2 gap-4 sm:columns-3">
-                {group.frames.map((frame) => (
-                  <Tile key={frame.id} frame={frame} />
-                ))}
+                {group.frames.map((frame) =>
+                  frame.status === 'waiting' ? (
+                    <WaitingTile key={frame.id} frame={frame} />
+                  ) : (
+                    <Tile key={frame.id} frame={frame} />
+                  )
+                )}
               </div>
             </div>
           ))}

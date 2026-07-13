@@ -45,7 +45,7 @@ export default async function InvitationPage({ params }: { params: { slug: strin
             {copy.storyboard.invitationTitle}
           </h1>
           <p className="mx-auto mt-5 max-w-md font-serif text-lg italic text-violet-3">
-            {story.title} — {copy.storyboard.invitationLead}
+            {copy.storyboard.invitationLead}
           </p>
           <StarDivider onDark className="mx-auto mt-6 max-w-[12rem]" />
         </div>

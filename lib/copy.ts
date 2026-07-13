@@ -37,7 +37,7 @@ export const copy = {
     begin: 'Begin a new chapter',
     // The little dialog that opens when you begin one.
     beginPrompt: 'What should we call it?',
-    beginPlaceholder: 'Tagaytay II',
+    beginPlaceholder: 'Chapter Title',
     beginConfirm: 'Begin',
     beginCancel: 'Not yet',
     beginError: "That story couldn't be started. Try again?",
@@ -194,8 +194,8 @@ export const copy = {
     doneOutline: 'Done editing',
     invite: 'Share the invitation',
     invitationEyebrow: 'An invitation',
-    invitationTitle: 'Come with me.',
-    invitationLead: 'Here is the day I have in mind for us.',
+    invitationTitle: 'Take my hand',
+    invitationLead: 'Let’s write the rest of our story together.',
     emptyInvite: 'Outline your Storyboard',
     lead: 'Sketch the day before it happens. Or don\'t — a story works either way.',
     empty: "Nothing's been sketched yet. Start wherever you like.",
@@ -422,7 +422,7 @@ export const copy = {
   },
 
   nav: {
-    signOut: 'Close the book for now',
+    signOut: 'Logout',
     // 1.2 profile menu (upper-right on The Library)
     profileEyebrow: 'Signed in as',
     editProfile: 'Change your photo',
